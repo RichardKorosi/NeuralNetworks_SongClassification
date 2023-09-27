@@ -111,12 +111,12 @@ print(X_train.min(numeric_only=True))
 print("-"*10, "Max", "-"*10)
 print(X_train.max(numeric_only=True))
 
-# Scale data
-scaler = MinMaxScaler()
-# !!!!!
-X_train = scaler.fit_transform(X_train)
-X_valid = scaler.transform(X_valid)
-X_test = scaler.transform(X_test)
+# # Scale data
+# scaler = MinMaxScaler()
+# # !!!!!
+# X_train = scaler.fit_transform(X_train)
+# X_valid = scaler.transform(X_valid)
+# X_test = scaler.transform(X_test)
 
 # Standardize data
 scaler = StandardScaler()
@@ -142,6 +142,26 @@ print(X_train.min(numeric_only=True))
 print("-"*10, "Max", "-"*10)
 print(X_train.max(numeric_only=True))
 
+# Train MLP model to predict country
+print("*"*100, "MLP", "*"*100)
+# print(f"Random accuracy: {1/len(y_train.unique())}")
+
+clf = MLPClassifier(
+    hidden_layer_sizes=(100, 100, 10, 10),
+    random_state=1,
+    max_iter=10,
+    validation_fraction=0.2,
+    early_stopping=True,
+    learning_rate='adaptive',
+    learning_rate_init=0.001,
+).fit(X_train, y_train)
+
+# Predict on train set
+y_pred = clf.predict(X_train)
+print('MLP accuracy on train set: ', accuracy_score(y_train, y_pred))
+# cm_train = confusion_matrix(y_train, y_pred)
+
 # Poznamky na opytanie
 # 1. Pri filtrovani outlinerov sa mi rovno podarilo odstranovat aj null hodnoty, ci to je ok?
 # 2. Po zakodovani neciselnych hodnot mam plno grafov. Je to ok?
+# y_train nefunguje?
