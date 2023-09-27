@@ -17,7 +17,6 @@ pd.set_option('display.max_columns', 3000)
 # Do not show pandas warnings
 pd.set_option('mode.chained_assignment', None)
 
-# Load the dataset https://ourworldindata.org/grapher/birth-rate-vs-death-rate
 df = pd.read_csv('./data/zadanie1_dataset.csv')
 
 # Remove outliers (0,5b) -----------------------------------------------------------------------------------------------
@@ -70,22 +69,26 @@ print(df.isnull().sum())
 print("*" * 100, "Column types", "*" * 100)
 print(df.dtypes)
 
-df = pd.get_dummies(df, columns=['top_genre'], prefix='top_genre_', prefix_sep='')  # Encode top_genre column
-df = pd.get_dummies(df, columns=['emotion'], prefix='emotion_', prefix_sep='')  # Encode emotion column
+df = pd.get_dummies(df, columns=['top_genre'], prefix='', prefix_sep='')  # Encode top_genre column
+df = pd.get_dummies(df, columns=['emotion'], prefix='', prefix_sep='')  # Encode emotion column
 
 print("*" * 100, "Column types", "*" * 100)
 print(df.dtypes)
 
 df.to_csv('./data/zadanie1_dataset_clean.csv', index=False)
 
+# Split dataset into X and y (input and output) (0,5b) -----------------------------------------------------------------
+
 # Split dataset into X and y
-X = df.drop(columns=['emotion_calm', 'emotion_energetic', 'emotion_happy', 'emotion_sad'])
-y = df[['emotion_calm', 'emotion_energetic', 'emotion_happy', 'emotion_sad']]
+X = df.drop(columns=['calm', 'energetic', 'happy', 'sad'])
+y = df[['calm', 'energetic', 'happy', 'sad']]
 
 # Split dataset into train, valid and test
 X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
 X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
                                                     random_state=42)
+
+# Scale and standardize data (0,5b) ------------------------------------------------------------------------------------
 
 # Print dataset shapes
 print("*"*100, "Dataset shapes", "*"*100)
@@ -138,3 +141,7 @@ print("-"*10, "Min", "-"*10)
 print(X_train.min(numeric_only=True))
 print("-"*10, "Max", "-"*10)
 print(X_train.max(numeric_only=True))
+
+# Poznamky na opytanie
+# 1. Pri filtrovani outlinerov sa mi rovno podarilo odstranovat aj null hodnoty, ci to je ok?
+# 2. Po zakodovani neciselnych hodnot mam plno grafov. Je to ok?
