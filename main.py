@@ -105,7 +105,7 @@ print(f"y_valid: {y_valid.shape}")
 print(f"y_test: {y_test.shape}")
 
 # Plot histograms before scaling
-X_train.hist(bins=50, figsize=(20, 15))
+X_train.hist(bins=70, figsize=(15, 15))
 plt.suptitle('Histograms before scaling/standardizing')
 plt.show()
 
@@ -130,8 +130,17 @@ X_test = pd.DataFrame(X_test, columns=X.columns)
 
 # Plot histograms after scaling/standardizing
 X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=50, figsize=(20, 15))
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
 plt.suptitle('Histograms after scaling/standardizing')
+plt.show()
+
+# Create me chart with explicit column ratio
+# add there also percentage of explicit songs
+sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=False)
+plt.figure(figsize=(13, 13))
+plt.title('Explicit')
+plt.pie(sizes, autopct='', labels=None), plt.legend(labels=['No', 'Yes'], loc='center', bbox_to_anchor=(1, 0.5),
+                                                        fontsize='large')
 plt.show()
 
 
