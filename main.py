@@ -29,15 +29,17 @@ print("-" * 10, "Max", "-" * 10)
 print(df.max(numeric_only=True))
 
 df = df[(df['danceability'] >= 0) & (df['danceability'] <= 1)]  # Some values were higher than 1
-# df = df[(df['energy'] >= 0) & (df['energy'] <= 1)]  # No outliners found (just in case)
 df = df[(df['loudness'] >= -60) & (df['loudness'] <= 5)]  # Range should be <-60, 0>, one value is slightly above 0
+df = df[(df['tempo'] > 0)]  # Some outliners found with 0 tempo
+df = df[(df['duration_ms'] > 0) & (df['duration_ms'] <= 1967400)]  # Some outliners found (last one is long but valid)
+
+
+# df = df[(df['energy'] >= 0) & (df['energy'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['speechiness'] >= 0) & (df['speechiness'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['acousticness'] >= 0) & (df['acousticness'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['instrumentalness'] >= 0) & (df['instrumentalness'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['liveness'] >= 0) & (df['liveness'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['valence'] >= 0) & (df['valence'] <= 1)]  # No outliners found (just in case)
-df = df[(df['tempo'] > 0)]  # Some outliners found with 0 tempo
-df = df[(df['duration_ms'] > 0) & (df['duration_ms'] <= 1967400)]  # Some outliners found (last one is long but valid)
 # df = df[(df['popularity'] >= 0) & (df['popularity'] <= 100)]  # No outliners found (just in case)
 # df = df[(df['number_of_artists'] >= 1) & (df['number_of_artists'] <= 30)]  # No outliners found (just in case)
 
@@ -70,7 +72,6 @@ print("*" * 100, "Column types", "*" * 100)
 print(df.dtypes)
 
 df = pd.get_dummies(df, columns=['top_genre'], prefix='', prefix_sep='')  # Encode top_genre column
-# df = pd.get_dummies(df, columns=['emotion'], prefix='', prefix_sep='')  # Encode emotion column
 
 # Use Label encoding for country
 le = LabelEncoder()
