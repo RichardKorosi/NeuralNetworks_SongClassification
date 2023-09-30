@@ -33,7 +33,6 @@ df = df[(df['loudness'] >= -60) & (df['loudness'] <= 5)]  # Range should be <-60
 df = df[(df['tempo'] > 0)]  # Some outliners found with 0 tempo
 df = df[(df['duration_ms'] > 0) & (df['duration_ms'] <= 1967400)]  # Some outliners found (last one is long but valid)
 
-
 # df = df[(df['energy'] >= 0) & (df['energy'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['speechiness'] >= 0) & (df['speechiness'] <= 1)]  # No outliners found (just in case)
 # df = df[(df['acousticness'] >= 0) & (df['acousticness'] <= 1)]  # No outliners found (just in case)
@@ -58,7 +57,8 @@ print(f"Lenght of dataset: {len(df)}")
 print(df.isnull().sum())
 
 # Deal with missing values and columns with no use
-df = df.dropna(subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop 167 rows with missing values in top_genre
+df = df.dropna(
+    subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop 167 rows with missing values in top_genre
 df = df.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)  # Drop columns with no use
 
 print("*" * 100, "Missing values after removing them", "*" * 100)
@@ -90,12 +90,13 @@ y = df['emotion']
 
 # Split dataset into train, valid and test
 X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
-X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5, random_state=42)
+X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                    random_state=42)
 
 # Scale and standardize data (0,5b) ------------------------------------------------------------------------------------
 
 # Print dataset shapes
-print("*"*100, "Dataset shapes", "*"*100)
+print("*" * 100, "Dataset shapes", "*" * 100)
 print(f"X_train: {X_train.shape}")
 print(f"X_valid: {X_valid.shape}")
 print(f"X_test: {X_test.shape}")
@@ -109,10 +110,10 @@ plt.suptitle('Histograms before scaling/standardizing')
 plt.show()
 
 # Print min and max values of columns
-print("*"*100, "Before scaling/standardizing", "*"*100)
-print("-"*10, "Min", "-"*10)
+print("*" * 100, "Before scaling/standardizing", "*" * 100)
+print("-" * 10, "Min", "-" * 10)
 print(X_train.min(numeric_only=True))
-print("-"*10, "Max", "-"*10)
+print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
 # # Scale data
@@ -135,26 +136,39 @@ X_valid = pd.DataFrame(X_valid, columns=X.columns)
 X_test = pd.DataFrame(X_test, columns=X.columns)
 
 # Plot histograms after scaling/standardizing
-X_train.hist(bins=50, figsize=(20, 15))
+X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=50, figsize=(20, 15))
 plt.suptitle('Histograms after scaling/standardizing')
 plt.show()
 
-# #create pie plot with "genre" columns
-df['ambient'].value_counts().plot(kind='pie', autopct='%1.0f%%', pctdistance=1.1, labeldistance=1.2)
+
+# Generate pie chart
+sizes = (X_train[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall', 'disco', 'edm',
+         'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop', 'j-rock', 'jazz',
+         'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
+         .sum().sort_values(ascending=False).head(32))
+
+plt.figure(figsize=(13, 13))
+plt.title('Žánre')
+plt.pie(sizes, autopct='', labels=None)
+
+# Generate legend with labels and percentages
+genres = sizes.index
+percentages = [f'{genre}: {size/sum(sizes)*100:.1f}%' for genre, size in zip(genres, sizes)]
+plt.legend(labels=percentages, loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
+
 plt.show()
 
-
-
 # Print min and max values of columns
-print("*"*100, "After scaling/standardizing", "*"*100)
-print("-"*10, "Min", "-"*10)
+print("*" * 100, "After scaling/standardizing", "*" * 100)
+print("-" * 10, "Min", "-" * 10)
 print(X_train.min(numeric_only=True))
-print("-"*10, "Max", "-"*10)
+print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
 # Train MLP model to predict country
-print("*"*100, "MLP", "*"*100)
-print(f"Random accuracy: {1/len(y_train.unique())}")
+print("*" * 100, "MLP", "*" * 100)
+print(f"Random accuracy: {1 / len(y_train.unique())}")
 
 clf = MLPClassifier(
     hidden_layer_sizes=(100, 100, 25, 15, 10),
@@ -180,14 +194,14 @@ cm_test = confusion_matrix(y_test, y_pred)
 class_names = list(le.inverse_transform(clf.classes_))
 
 disp = ConfusionMatrixDisplay(confusion_matrix=cm_train, display_labels=class_names)
-fig, ax = plt.subplots(figsize=(10,10))
+fig, ax = plt.subplots(figsize=(10, 10))
 disp.plot(ax=ax)
 disp.ax_.set_title("Confusion matrix on train set")
 disp.ax_.set(xlabel='Predicted', ylabel='True')
 plt.show()
 
 disp = ConfusionMatrixDisplay(confusion_matrix=cm_test, display_labels=class_names)
-fig, ax = plt.subplots(figsize=(10,10))
+fig, ax = plt.subplots(figsize=(10, 10))
 disp.plot(ax=ax)
 disp.ax_.set_title("Confusion matrix on test set")
 disp.ax_.set(xlabel='Predicted', ylabel='True')
