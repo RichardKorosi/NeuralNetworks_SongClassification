@@ -116,19 +116,12 @@ print(X_train.min(numeric_only=True))
 print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
-# # Scale data
+# Scale data
 scaler = MinMaxScaler()
-# # !!!!!
+# !!!!!
 X_train = scaler.fit_transform(X_train)
 X_valid = scaler.transform(X_valid)
 X_test = scaler.transform(X_test)
-
-# Standardize data
-# scaler = StandardScaler()
-# !!!!!
-# X_train = scaler.fit_transform(X_train)
-# X_valid = scaler.transform(X_valid)
-# X_test = scaler.transform(X_test)
 
 # Convert numpy arrays to pandas DataFrames
 X_train = pd.DataFrame(X_train, columns=X.columns)
