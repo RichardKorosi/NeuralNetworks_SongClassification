@@ -138,6 +138,12 @@ X_train.hist(bins=50, figsize=(20, 15))
 plt.suptitle('Histograms after scaling/standardizing')
 plt.show()
 
+# #create pie plot with "genre" columns
+df['ambient'].value_counts().plot(kind='pie', autopct='%1.0f%%', pctdistance=1.1, labeldistance=1.2)
+plt.show()
+
+
+
 # Print min and max values of columns
 print("*"*100, "After scaling/standardizing", "*"*100)
 print("-"*10, "Min", "-"*10)
@@ -150,7 +156,7 @@ print("*"*100, "MLP", "*"*100)
 print(f"Random accuracy: {1/len(y_train.unique())}")
 
 clf = MLPClassifier(
-    hidden_layer_sizes=(100, 100, 10, 10),
+    hidden_layer_sizes=(100, 100, 25, 15, 10),
     random_state=1,
     max_iter=100,
     validation_fraction=0.2,
@@ -189,5 +195,5 @@ plt.show()
 # Poznamky na opytanie
 # 1. Pri filtrovani outlinerov sa mi rovno podarilo odstranovat aj null hodnoty, ci to je ok?
 # 2. Vymazanie genres, filtered_genres okrem name a url, je to ok?
-# 3. Po zakodovani neciselnych hodnot mam plno grafov. Je to ok?
-# 4. emotion treba cez label encoding?
+# 3. Po zakodovani neciselnych hodnot mam plno grafov. Je to ok (myslim ze ano)?
+# 4. Emotion mozeme cez label encoding?
