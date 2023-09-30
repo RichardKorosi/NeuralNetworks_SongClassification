@@ -199,9 +199,3 @@ disp.plot(ax=ax)
 disp.ax_.set_title("Confusion matrix on test set")
 disp.ax_.set(xlabel='Predicted', ylabel='True')
 plt.show()
-
-# Poznamky na opytanie
-# 1. Pri filtrovani outlinerov sa mi rovno podarilo odstranovat aj null hodnoty, ci to je ok?
-# 2. Vymazanie genres, filtered_genres okrem name a url, je to ok?
-# 3. Po zakodovani neciselnych hodnot mam plno grafov. Je to ok (myslim ze ano)?
-# 4. Emotion mozeme cez label encoding?
