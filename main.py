@@ -19,7 +19,7 @@ pd.set_option('mode.chained_assignment', None)
 
 df = pd.read_csv('./data/zadanie1_dataset.csv')
 
-# Remove outliers (0,5b) -----------------------------------------------------------------------------------------------
+# Handle outliers (0,5b) -----------------------------------------------------------------------------------------------
 
 # Print min and max values of columns before removing outliers
 print("*" * 100, "Before removing outliers", "*" * 100)
@@ -82,7 +82,7 @@ print(df.dtypes)
 
 df.to_csv('./data/zadanie1_dataset_clean.csv', index=False)
 
-# Split dataset into X and y (input and output) (0,5b) -----------------------------------------------------------------
+# Split dataset into X and y (input and output) (1b) -------------------------------------------------------------------
 
 # Split dataset into X and y
 X = df.drop(columns=['emotion'])
@@ -137,16 +137,16 @@ plt.show()
 sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=False)
 plt.figure(figsize=(13, 13))
 plt.title('Explicit')
-plt.pie(sizes, autopct='%1.1f%%', labels=None), plt.legend(labels=['No', 'Yes'], loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
+plt.pie(sizes, autopct='%1.1f%%', labels=None), plt.legend(labels=['No', 'Yes'], loc='center', bbox_to_anchor=(1, 0.5),
+                                                           fontsize='large')
 plt.show()
 
-
-
 # Generate pie chart
-sizes = (X_train[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall', 'disco', 'edm',
-         'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop', 'j-rock', 'jazz',
-         'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
-         .sum().sort_values(ascending=False).head(32))
+sizes = (
+    X_train[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall', 'disco', 'edm',
+             'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop', 'j-rock', 'jazz',
+             'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
+    .sum().sort_values(ascending=False).head(32))
 
 plt.figure(figsize=(13, 13))
 plt.title('Žánre')
@@ -154,7 +154,7 @@ plt.pie(sizes, autopct='', labels=None)
 
 # Generate legend with labels and percentages
 genres = sizes.index
-percentages = [f'{genre}: {size/sum(sizes)*100:.1f}%' for genre, size in zip(genres, sizes)]
+percentages = [f'{genre}: {size / sum(sizes) * 100:.1f}%' for genre, size in zip(genres, sizes)]
 plt.legend(labels=percentages, loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
 
 plt.show()
@@ -166,7 +166,8 @@ print(X_train.min(numeric_only=True))
 print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
-# Train MLP model to predict country
+# Train MLP model to predict emotion (1b) ------------------------------------------------------------------------------
+
 print("*" * 100, "MLP", "*" * 100)
 print(f"Random accuracy: {1 / len(y_train.unique())}")
 
@@ -179,6 +180,8 @@ clf = MLPClassifier(
     learning_rate='adaptive',
     learning_rate_init=0.001,
 ).fit(X_train, y_train)
+
+# Print Results and confusion matrix of results (1b) -------------------------------------------------------------------
 
 # Predict on train set
 y_pred = clf.predict(X_train)
@@ -206,3 +209,5 @@ disp.plot(ax=ax)
 disp.ax_.set_title("Confusion matrix on test set")
 disp.ax_.set(xlabel='Predicted', ylabel='True')
 plt.show()
+
+# ----------------------------------------------------------------------------------------------------------------------
