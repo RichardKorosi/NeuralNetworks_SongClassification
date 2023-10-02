@@ -103,18 +103,18 @@ print(f"y_train: {y_train.shape}")
 print(f"y_valid: {y_valid.shape}")
 print(f"y_test: {y_test.shape}")
 
-# Plot histograms before scaling (for interval attributes) (excludes explicit, genres)
-X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-            'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
-plt.suptitle('Histograms before scaling/standardizing')
-plt.show()
-
 # Print min and max values of columns
 print("*" * 100, "Before scaling/standardizing", "*" * 100)
 print("-" * 10, "Min", "-" * 10)
 print(X_train.min(numeric_only=True))
 print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
+
+# Plot histograms before scaling (for interval attributes) (excludes explicit, genres columns)
+X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+            'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
+plt.suptitle('Histograms before scaling/standardizing')
+plt.show()
 
 # Scale data
 scaler = MinMaxScaler()
@@ -147,6 +147,7 @@ sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_val
 plt.figure(figsize=(15, 15))
 plt.title(f'Explicit [{len(X_train)}]')
 plt.pie(sizes, autopct='', labels=None)
+
 numbers = sizes.index
 percentages = [f'True: {size * 100:.1f}%' if number == 1.0 else f'False: {size * 100:.1f}%' for number, size in zip(numbers, sizes)]
 plt.legend(labels=percentages, title="True/False:Percento", loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
@@ -163,7 +164,6 @@ plt.figure(figsize=(15, 15))
 plt.title(f'Žánre [{len(X_train)}]')
 plt.pie(sizes, autopct='', labels=None)
 
-# Generate legend with labels and percentages
 genres = sizes.index
 percentages = [f'{genre}: {size / sum(sizes) * 100:.1f}%' for genre, size in zip(genres, sizes)]
 plt.legend(labels=percentages,title="Žáner:Percento" , loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
