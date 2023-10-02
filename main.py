@@ -79,6 +79,13 @@ le = LabelEncoder()
 df['emotion'] = le.fit_transform(df['emotion'])
 
 print("*" * 100, "Column types", "*" * 100)
+
+# Change boolean columns to float (False = 0, True = 1)
+for col in ['explicit', 'ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+            'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop',
+            'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly', 'ska',
+            'sleep', 'soul']:
+    df[col] = df[col].astype(float)
 print(df.dtypes)
 
 # Split dataset into X and y (input and output) (1b) -------------------------------------------------------------------
