@@ -53,12 +53,12 @@ print(df.max(numeric_only=True))
 
 # Count missing values in columns
 print("*" * 100, "Missing values", "*" * 100)
-print(f"Lenght of dataset: {len(df)}")
+print(f"Length of dataset: {len(df)}")
 print(df.isnull().sum())
 
 # Deal with missing values and columns with no use
 df = df.dropna(
-    subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop 167 rows with missing values in top_genre
+    subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
 df = df.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)  # Drop columns with no use
 
 print("*" * 100, "Missing values after removing them", "*" * 100)
@@ -71,7 +71,8 @@ print(df.isnull().sum())
 print("*" * 100, "Column types", "*" * 100)
 print(df.dtypes)
 
-df = pd.get_dummies(df, columns=['top_genre'], prefix='', prefix_sep='')  # Encode top_genre column
+# Use dummy encoding for top_genre
+df = pd.get_dummies(df, columns=['top_genre'], prefix='', prefix_sep='')
 
 # Use Label encoding for emotion
 le = LabelEncoder()
@@ -79,8 +80,6 @@ df['emotion'] = le.fit_transform(df['emotion'])
 
 print("*" * 100, "Column types", "*" * 100)
 print(df.dtypes)
-
-df.to_csv('./data/zadanie1_dataset_clean.csv', index=False)
 
 # Split dataset into X and y (input and output) (1b) -------------------------------------------------------------------
 
