@@ -31,7 +31,7 @@ print(df.max(numeric_only=True))
 df = df[(df['danceability'] >= 0) & (df['danceability'] <= 1)]  # Some values were higher than 1
 df = df[(df['loudness'] >= -60) & (df['loudness'] <= 5)]  # Range should be <-60, 0>, one value is slightly above 0
 df = df[(df['tempo'] > 0)]  # Some outliers found with 0 tempo
-df = df[(df['duration_ms'] > 0) & (df['duration_ms'] <= 1967400)]  # Some outliers found (last one is long but valid)
+df = df[(df['duration_ms'] > 20000) & (df['duration_ms'] <= 1967400)]  # Some outliers found (last one is long but valid)
 
 # df = df[(df['energy'] >= 0) & (df['energy'] <= 1)]  # No outliers found (just in case)
 # df = df[(df['speechiness'] >= 0) & (df['speechiness'] <= 1)]  # No outliers found (just in case)
@@ -62,7 +62,7 @@ df = df.dropna(
 df = df.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)  # Drop columns with no use
 
 print("*" * 100, "Missing values after removing them", "*" * 100)
-print(f"Lenght of dataset: {len(df)}")
+print(f"Length of dataset: {len(df)}")
 print(df.isnull().sum())
 
 # Column types and encoding (0,5b) ------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ print(df.dtypes)
 
 df = pd.get_dummies(df, columns=['top_genre'], prefix='', prefix_sep='')  # Encode top_genre column
 
-# Use Label encoding for country
+# Use Label encoding for emotion
 le = LabelEncoder()
 df['emotion'] = le.fit_transform(df['emotion'])
 
@@ -94,7 +94,7 @@ X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, 
                                                     random_state=42)
 
 # Scale and standardize data (0,5b) ------------------------------------------------------------------------------------
-df = df.astype(float)
+
 # Print dataset shapes
 print("*" * 100, "Dataset shapes", "*" * 100)
 print(f"X_train: {X_train.shape}")
@@ -104,8 +104,9 @@ print(f"y_train: {y_train.shape}")
 print(f"y_valid: {y_valid.shape}")
 print(f"y_test: {y_test.shape}")
 
-# Plot histograms before scaling
-X_train.hist(bins=70, figsize=(15, 15))
+# Plot histograms before scaling (for interval attributes) (excludes explicit, genres)
+X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+            'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
 plt.suptitle('Histograms before scaling/standardizing')
 plt.show()
 
@@ -128,43 +129,46 @@ X_train = pd.DataFrame(X_train, columns=X.columns)
 X_valid = pd.DataFrame(X_valid, columns=X.columns)
 X_test = pd.DataFrame(X_test, columns=X.columns)
 
-# Plot histograms after scaling/standardizing
-X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
-plt.suptitle('Histograms after scaling/standardizing')
-plt.show()
-
-sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=False)
-plt.figure(figsize=(13, 13))
-plt.title('Explicit')
-plt.pie(sizes, autopct='%1.1f%%', labels=None), plt.legend(labels=['No', 'Yes'], loc='center', bbox_to_anchor=(1, 0.5),
-                                                           fontsize='large')
-plt.show()
-
-# Generate pie chart
-sizes = (
-    X_train[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall', 'disco', 'edm',
-             'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop', 'j-rock', 'jazz',
-             'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
-    .sum().sort_values(ascending=False).head(32))
-
-plt.figure(figsize=(13, 13))
-plt.title('Žánre')
-plt.pie(sizes, autopct='', labels=None)
-
-# Generate legend with labels and percentages
-genres = sizes.index
-percentages = [f'{genre}: {size / sum(sizes) * 100:.1f}%' for genre, size in zip(genres, sizes)]
-plt.legend(labels=percentages, loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
-
-plt.show()
-
 # Print min and max values of columns
 print("*" * 100, "After scaling/standardizing", "*" * 100)
 print("-" * 10, "Min", "-" * 10)
 print(X_train.min(numeric_only=True))
 print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
+
+
+# Plot histograms after scaling (for interval attributes) (excludes explicit, genres)
+X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+            'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
+plt.suptitle('Histograms after scaling/standardizing')
+plt.show()
+
+# Piechart of explicit-----------
+sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=True)
+plt.figure(figsize=(15, 15))
+plt.title(f'Explicit [{len(X_train)}]')
+plt.pie(sizes, autopct='', labels=None)
+numbers = sizes.index
+percentages = [f'True: {size * 100:.1f}%' if number == 1.0 else f'False: {size * 100:.1f}%' for number, size in zip(numbers, sizes)]
+plt.legend(labels=percentages, title="True/False:Percento", loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
+plt.show()
+
+
+# Piechart of genres-------
+sizes = (
+    X_train[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall', 'disco', 'edm',
+             'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop', 'j-rock', 'jazz',
+             'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
+    .sum().sort_values(ascending=False).head(32))
+plt.figure(figsize=(15, 15))
+plt.title(f'Žánre [{len(X_train)}]')
+plt.pie(sizes, autopct='', labels=None)
+
+# Generate legend with labels and percentages
+genres = sizes.index
+percentages = [f'{genre}: {size / sum(sizes) * 100:.1f}%' for genre, size in zip(genres, sizes)]
+plt.legend(labels=percentages,title="Žáner:Percento" , loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
+plt.show()
 
 # Train MLP model to predict emotion (1b) ------------------------------------------------------------------------------
 
