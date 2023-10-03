@@ -108,7 +108,6 @@ print(f"Full dataset: {df.shape}")
 print(f"X_train: {X_train.shape}")
 print(f"X_valid: {X_valid.shape}")
 print(f"X_test: {X_test.shape}")
-
 print(f"y_train: {y_train.shape}")
 print(f"y_valid: {y_valid.shape}")
 print(f"y_test: {y_test.shape}")
@@ -185,12 +184,12 @@ print(f"Random accuracy: {1 / len(y_train.unique())}")
 
 clf = MLPClassifier(
     hidden_layer_sizes=(100, 100, 25, 15, 10),
-    # random_state=1,
-    # max_iter=100,
-    # validation_fraction=0.2,
+    random_state=1,
+    max_iter=100,
+    validation_fraction=0.2,
     early_stopping=True,
-    # learning_rate='adaptive'-,
-    # learning_rate_init=0.001,
+    learning_rate='adaptive',
+    learning_rate_init=0.001,
 ).fit(X_train, y_train)
 
 # Print Results and confusion matrix of results (1b) -------------------------------------------------------------------
