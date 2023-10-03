@@ -31,7 +31,8 @@ print(df.max(numeric_only=True))
 df = df[(df['danceability'] >= 0) & (df['danceability'] <= 1)]  # Some values were higher than 1
 df = df[(df['loudness'] >= -60) & (df['loudness'] <= 5)]  # Range should be <-60, 0>, one value is slightly above 0
 df = df[(df['tempo'] > 0)]  # Some outliers found with 0 tempo
-df = df[(df['duration_ms'] > 20000) & (df['duration_ms'] <= 1967400)]  # Some outliers found (last one is long but valid)
+df = df[
+    (df['duration_ms'] > 20000) & (df['duration_ms'] <= 1967400)]  # Some outliers found (last one is long but valid)
 
 # df = df[(df['energy'] >= 0) & (df['energy'] <= 1)]  # No outliers found (just in case)
 # df = df[(df['speechiness'] >= 0) & (df['speechiness'] <= 1)]  # No outliers found (just in case)
@@ -103,9 +104,11 @@ X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, 
 
 # Print dataset shapes
 print("*" * 100, "Dataset shapes", "*" * 100)
+print(f"Full dataset: {df.shape}")
 print(f"X_train: {X_train.shape}")
 print(f"X_valid: {X_valid.shape}")
 print(f"X_test: {X_test.shape}")
+
 print(f"y_train: {y_train.shape}")
 print(f"y_valid: {y_valid.shape}")
 print(f"y_test: {y_test.shape}")
@@ -119,7 +122,7 @@ print(X_train.max(numeric_only=True))
 
 # Plot histograms before scaling (for interval attributes) (excludes explicit, genres columns)
 X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-            'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
 plt.suptitle('Histograms before scaling/standardizing')
 plt.show()
 
@@ -142,10 +145,9 @@ print(X_train.min(numeric_only=True))
 print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
-
 # Plot histograms after scaling (for interval attributes) (excludes explicit, genres)
 X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-            'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
 plt.suptitle('Histograms after scaling/standardizing')
 plt.show()
 
@@ -156,10 +158,10 @@ plt.title(f'Explicit [{len(X_train)}]')
 plt.pie(sizes, autopct='', labels=None)
 
 numbers = sizes.index
-percentages = [f'True: {size * 100:.1f}%' if number == 1.0 else f'False: {size * 100:.1f}%' for number, size in zip(numbers, sizes)]
+percentages = [f'True: {size * 100:.1f}%' if number == 1.0 else f'False: {size * 100:.1f}%' for number, size in
+               zip(numbers, sizes)]
 plt.legend(labels=percentages, title="True/False:Percento", loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
 plt.show()
-
 
 # Piechart of genres-------
 sizes = (
@@ -173,7 +175,7 @@ plt.pie(sizes, autopct='', labels=None)
 
 genres = sizes.index
 percentages = [f'{genre}: {size / sum(sizes) * 100:.1f}%' for genre, size in zip(genres, sizes)]
-plt.legend(labels=percentages,title="Žáner:Percento" , loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
+plt.legend(labels=percentages, title="Žáner:Percento", loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
 plt.show()
 
 # Train MLP model to predict emotion (1b) ------------------------------------------------------------------------------
@@ -183,12 +185,12 @@ print(f"Random accuracy: {1 / len(y_train.unique())}")
 
 clf = MLPClassifier(
     hidden_layer_sizes=(100, 100, 25, 15, 10),
-    random_state=1,
-    max_iter=100,
-    validation_fraction=0.2,
+    # random_state=1,
+    # max_iter=100,
+    # validation_fraction=0.2,
     early_stopping=True,
-    learning_rate='adaptive',
-    learning_rate_init=0.001,
+    # learning_rate='adaptive'-,
+    # learning_rate_init=0.001,
 ).fit(X_train, y_train)
 
 # Print Results and confusion matrix of results (1b) -------------------------------------------------------------------
