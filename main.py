@@ -19,6 +19,26 @@ pd.set_option('mode.chained_assignment', None)
 
 df = pd.read_csv('./data/zadanie1_dataset.csv')
 
+
+# Functions ------------------------------------------------------------------------------------------------------------
+def createHistograms(X_train, time):
+    attributes = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+                  'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']
+
+    X_train[attributes].hist(bins=70, figsize=(15, 15))
+
+    # Loop through each subplot and set labels
+    for ax in plt.gcf().get_axes():
+        ax.set_xlabel('Hodnota')  # Set x-axis label to "hodnota"
+        ax.set_ylabel('Počet')  # Set y-axis label to "pocet"
+    if time == "before":
+        plt.suptitle('Histograms before scaling/standardizing')
+    else:
+        plt.suptitle('Histograms after scaling/standardizing')
+    plt.show()
+    return None
+
+
 # Handle outliers (0,5b) -----------------------------------------------------------------------------------------------
 
 # Print min and max values of columns before removing outliers
@@ -119,11 +139,7 @@ print(X_train.min(numeric_only=True))
 print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
-# Plot histograms before scaling (for interval attributes) (excludes explicit, genres columns)
-X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
-plt.suptitle('Histograms before scaling/standardizing')
-plt.show()
+createHistograms(X_train, "before")
 
 # Scale data
 scaler = MinMaxScaler()
@@ -145,10 +161,8 @@ print("-" * 10, "Max", "-" * 10)
 print(X_train.max(numeric_only=True))
 
 # Plot histograms after scaling (for interval attributes) (excludes explicit, genres)
-X_train[['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
-         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']].hist(bins=70, figsize=(15, 15))
-plt.suptitle('Histograms after scaling/standardizing')
-plt.show()
+
+createHistograms(X_train, "after")
 
 # Piechart of explicit-----------
 sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=True)
@@ -182,14 +196,21 @@ plt.show()
 print("*" * 100, "MLP", "*" * 100)
 print(f"Random accuracy: {1 / len(y_train.unique())}")
 
+# 10                0.8639  0.85069
+# 100               0.8777  0.86545
+# 500               0.8792  0.86631
+# 150 150           0.8845  0.86197
+# 150 100 100       0.9035  0.86805
+# 1000 300 200      0.9045  0.86892
+# 200 150 100       0.88978 0.87152
+
+
+
 clf = MLPClassifier(
-    hidden_layer_sizes=(100, 100, 25, 15, 10),
+    hidden_layer_sizes=(200,150,100),
     random_state=1,
-    max_iter=100,
-    validation_fraction=0.2,
-    early_stopping=True,
-    learning_rate='adaptive',
-    learning_rate_init=0.001,
+    max_iter=250,
+    early_stopping=True
 ).fit(X_train, y_train)
 
 # Print Results and confusion matrix of results (1b) -------------------------------------------------------------------
