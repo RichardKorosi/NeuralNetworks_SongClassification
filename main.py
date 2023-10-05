@@ -255,4 +255,7 @@ def restOfFirstPart(df):
 df = handleOutliersAndMissingValues(df)
 dfWe = handleOutliersAndMissingValues(dfWe)
 df, le = encodeGenres(df)
+# export df and dfwe to csv
+df.to_csv('./data/zadanie1_dataset_cleaned.csv', index=False)
+dfWe.to_csv('./data/zadanie1_dataset_cleaned_we.csv', index=False)
 restOfFirstPart(df)
