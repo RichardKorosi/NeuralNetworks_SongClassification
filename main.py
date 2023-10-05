@@ -292,7 +292,7 @@ def secondPart(dframe, dframeWe):
     plt.show()
 
     # Define the number of intervals
-    num_intervals = 10
+    num_intervals = 12
 
     # Calculate the interval width
     interval_width = (dframe['speechiness'].max() - dframe['speechiness'].min()) / num_intervals
