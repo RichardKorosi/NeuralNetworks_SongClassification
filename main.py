@@ -204,8 +204,6 @@ print(f"Random accuracy: {1 / len(y_train.unique())}")
 # 1000 300 200      0.9045  0.86892
 # 200 150 100       0.88978 0.87152
 
-
-
 clf = MLPClassifier(
     hidden_layer_sizes=(200,150,100),
     random_state=1,
