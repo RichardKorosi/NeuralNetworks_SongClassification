@@ -284,6 +284,27 @@ def secondPart(dframe, dframeWe):
     plt.ylabel('loudness')
     plt.show()
 
+    # Define the number of intervals
+    num_intervals = 12
+
+    # Calculate the interval width
+    interval_width = (dframe['energy'].max() - dframe['energy'].min()) / num_intervals
+
+    # Group by speechiness intervals and calculate the average popularity for each group
+    dframe['energy_interval'] = pd.cut(dframe['energy'],
+                                            bins=np.linspace(dframe['energy'].min(), dframe['energy'].max(),
+                                                             num_intervals + 1))
+    average_energy = dframe.groupby('energy_interval')['loudness'].mean()
+
+    # Create a line plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(average_energy.index.categories.mid, average_energy.values, marker='o', color='skyblue')
+    plt.title('Average loudness vs. energy')
+    plt.xlabel('energy')
+    plt.ylabel('Average Popularity')
+    plt.grid(True)
+    plt.show()
+
     plt.figure(figsize=(10, 6))
     plt.scatter(dframe['speechiness'], dframe['popularity'], color='skyblue')
     plt.title('Scatter Plot')
