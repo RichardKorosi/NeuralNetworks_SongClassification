@@ -22,7 +22,7 @@ dfWe = pd.read_csv('./data/zadanie1_dataset.csv')
 
 
 # Functions ------------------------------------------------------------------------------------------------------------
-def handleOutliersAndMissingValues(dframe):
+def handleOutliersAndMissingValues(dframe, mode=0):
     # Handle outliers (0,5b)
     # -----------------------------------------------------------------------------------------------
 
@@ -56,9 +56,14 @@ def handleOutliersAndMissingValues(dframe):
     print(dframe.isnull().sum())
 
     # Deal with missing values and columns with no use
-    dframe = dframe.dropna(
-        subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
-    dframe = dframe.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)  # Drop columns with no use
+    if mode == 0:
+        dframe = dframe.dropna(
+            subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
+        dframe = dframe.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)  # Drop columns with no use
+    else:
+        dframe = dframe.dropna(
+            subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
+        dframe = dframe.drop(['name', 'url', 'genres'], axis=1)  # Drop columns with no use
 
     print("*" * 100, "Missing values after removing them", "*" * 100)
     print(f"Length of dataset: {len(dframe)}")
@@ -94,7 +99,7 @@ def encodeGenres(dframe):
     return dframe, le
 
 
-def createHistograms(X_train, time):
+def createHistogramsPartOne(X_train, time):
     attributes = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
                   'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']
 
@@ -112,65 +117,7 @@ def createHistograms(X_train, time):
 
     return None
 
-
-def restOfFirstPart(df):
-    # Split dataset into X and y (input and output) (1b)
-    # -------------------------------------------------------------------
-
-    # Split dataset into X and y
-    X = df.drop(columns=['emotion'])
-    y = df['emotion']
-
-    # Split dataset into train, valid and test
-    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
-    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
-                                                        random_state=42)
-
-    # Scale and standardize data (0,5b)
-    # ------------------------------------------------------------------------------------
-
-    # Print dataset shapes
-    print("*" * 100, "Dataset shapes", "*" * 100)
-    print(f"Full dataset: {df.shape}")
-    print(f"X_train: {X_train.shape}")
-    print(f"X_valid: {X_valid.shape}")
-    print(f"X_test: {X_test.shape}")
-    print(f"y_train: {y_train.shape}")
-    print(f"y_valid: {y_valid.shape}")
-    print(f"y_test: {y_test.shape}")
-
-    # Print min and max values of columns
-    print("*" * 100, "Before scaling/standardizing", "*" * 100)
-    print("-" * 10, "Min", "-" * 10)
-    print(X_train.min(numeric_only=True))
-    print("-" * 10, "Max", "-" * 10)
-    print(X_train.max(numeric_only=True))
-
-    createHistograms(X_train, "before")
-
-    # Scale data
-    scaler = MinMaxScaler()
-    # !!!!!
-    X_train = scaler.fit_transform(X_train)
-    X_valid = scaler.transform(X_valid)
-    X_test = scaler.transform(X_test)
-
-    # Convert numpy arrays to pandas DataFrames
-    X_train = pd.DataFrame(X_train, columns=X.columns)
-    X_valid = pd.DataFrame(X_valid, columns=X.columns)
-    X_test = pd.DataFrame(X_test, columns=X.columns)
-
-    # Print min and max values of columns
-    print("*" * 100, "After scaling/standardizing", "*" * 100)
-    print("-" * 10, "Min", "-" * 10)
-    print(X_train.min(numeric_only=True))
-    print("-" * 10, "Max", "-" * 10)
-    print(X_train.max(numeric_only=True))
-
-    # Plot histograms after scaling (for interval attributes) (excludes explicit, genres)
-
-    createHistograms(X_train, "after")
-
+def createPiechartsPartOne(X_train):
     # Piechart of explicit-----------
     sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=True)
     plt.figure(figsize=(15, 15))
@@ -198,6 +145,68 @@ def restOfFirstPart(df):
     percentages = [f'{genre}: {size / sum(sizes) * 100:.1f}%' for genre, size in zip(genres, sizes)]
     plt.legend(labels=percentages, title="Žáner:Percento", loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
     plt.show()
+
+
+def restOfFirstPart(dframe):
+    # Split dataset into X and y (input and output) (1b)
+    # -------------------------------------------------------------------
+
+    # Split dataset into X and y
+    X = dframe.drop(columns=['emotion'])
+    y = dframe['emotion']
+
+    # Split dataset into train, valid and test
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=42)
+
+    # Scale and standardize data (0,5b)
+    # ------------------------------------------------------------------------------------
+
+    # Print dataset shapes
+    print("*" * 100, "Dataset shapes", "*" * 100)
+    print(f"Full dataset: {dframe.shape}")
+    print(f"X_train: {X_train.shape}")
+    print(f"X_valid: {X_valid.shape}")
+    print(f"X_test: {X_test.shape}")
+    print(f"y_train: {y_train.shape}")
+    print(f"y_valid: {y_valid.shape}")
+    print(f"y_test: {y_test.shape}")
+
+    # Print min and max values of columns
+    print("*" * 100, "Before scaling/standardizing", "*" * 100)
+    print("-" * 10, "Min", "-" * 10)
+    print(X_train.min(numeric_only=True))
+    print("-" * 10, "Max", "-" * 10)
+    print(X_train.max(numeric_only=True))
+
+    createHistogramsPartOne(X_train, "before")
+    createPiechartsPartOne(X_train)
+
+
+
+    # Scale data
+    scaler = MinMaxScaler()
+    # !!!!!
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    # Convert numpy arrays to pandas DataFrames
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    # Print min and max values of columns
+    print("*" * 100, "After scaling/standardizing", "*" * 100)
+    print("-" * 10, "Min", "-" * 10)
+    print(X_train.min(numeric_only=True))
+    print("-" * 10, "Max", "-" * 10)
+    print(X_train.max(numeric_only=True))
+
+    # Plot histograms after scaling (for interval attributes) (excludes explicit, genres)
+
+    createHistogramsPartOne(X_train, "after")
 
     # Train MLP model to predict emotion (1b)
     # ------------------------------------------------------------------------------
@@ -251,11 +260,64 @@ def restOfFirstPart(df):
     plt.show()
 
 
+# Popularity -> TOP GENRE
+# Certain GENRE -> loudness w/e
+# Liveness -> Loudness
+
+# comedy, speechiness, all
+def secondPart(dframe, dframeWe):
+
+    correlation_matrix = dframe.corr()
+    plt.figure(figsize=(12, 11))
+    plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
+    plt.colorbar()
+    plt.title('Correlation Heatmap')
+    plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+    plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+    plt.show()
+
+    #ENERGY LOUDNESS
+    plt.figure(figsize=(10, 6))
+    plt.scatter(dframe['energy'], dframe['loudness'], color='skyblue')
+    plt.title('Scatter Plot')
+    plt.xlabel('energy')
+    plt.ylabel('loudness')
+    plt.show()
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(dframe['speechiness'], dframe['popularity'], color='skyblue')
+    plt.title('Scatter Plot')
+    plt.xlabel('speechiness')
+    plt.ylabel('popularity')
+    plt.show()
+
+    # Define the number of intervals
+    num_intervals = 10
+
+    # Calculate the interval width
+    interval_width = (dframe['speechiness'].max() - dframe['speechiness'].min()) / num_intervals
+
+    # Group by speechiness intervals and calculate the average popularity for each group
+    dframe['speechiness_interval'] = pd.cut(dframe['speechiness'],
+                                            bins=np.linspace(dframe['speechiness'].min(), dframe['speechiness'].max(),
+                                                             num_intervals + 1))
+    average_popularity = dframe.groupby('speechiness_interval')['popularity'].mean()
+
+    # Create a line plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(average_popularity.index.categories.mid, average_popularity.values, marker='o', color='skyblue')
+    plt.title('Average Popularity vs. Speechiness')
+    plt.xlabel('Speechiness')
+    plt.ylabel('Average Popularity')
+    plt.grid(True)
+    plt.show()
+
+    return None
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfWe = handleOutliersAndMissingValues(dfWe)
 df, le = encodeGenres(df)
-# export df and dfwe to csv
-df.to_csv('./data/zadanie1_dataset_cleaned.csv', index=False)
-dfWe.to_csv('./data/zadanie1_dataset_cleaned_we.csv', index=False)
-restOfFirstPart(df)
+#restOfFirstPart(df)
+secondPart(df, dfWe)
