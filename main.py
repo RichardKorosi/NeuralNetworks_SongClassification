@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
@@ -18,7 +18,7 @@ pd.set_option('display.max_columns', 3000)
 pd.set_option('mode.chained_assignment', None)
 
 df = pd.read_csv('./data/zadanie1_dataset.csv')
-dfWe = pd.read_csv('./data/zadanie1_dataset.csv')
+dfGen = pd.read_csv('./data/zadanie1_dataset.csv')
 
 
 # Functions ------------------------------------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ def handleOutliersAndMissingValues(dframe, mode=0):
     else:
         dframe = dframe.dropna(
             subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
-        dframe = dframe.drop(['name', 'url', 'genres'], axis=1)  # Drop columns with no use
+        dframe = dframe.drop(['name', 'url'], axis=1)  # Drop columns with no use
 
     print("*" * 100, "Missing values after removing them", "*" * 100)
     print(f"Length of dataset: {len(dframe)}")
@@ -72,31 +72,54 @@ def handleOutliersAndMissingValues(dframe, mode=0):
     return dframe
 
 
-def encodeGenres(dframe):
-    # Column types and encoding (0,5b)
-    # ------------------------------------------------------------------------------------ Print column types
-    print("*" * 100, "Column types", "*" * 100)
-    print(dframe.dtypes)
+def encodeGenres(dframe, mode=0):
+    if mode == 0:
+        # Column types and encoding (0,5b)
+        # ------------------------------------------------------------------------------------ Print column types
+        print("*" * 100, "Column types", "*" * 100)
+        print(dframe.dtypes)
 
-    # Use dummy encoding for top_genre
-    dframe = pd.get_dummies(dframe, columns=['top_genre'], prefix='', prefix_sep='')
+        # Use dummy encoding for top_genre
+        dframe = pd.get_dummies(dframe, columns=['top_genre'], prefix='', prefix_sep='')
 
-    # Use Label encoding for emotion
-    le = LabelEncoder()
-    dframe['emotion'] = le.fit_transform(df['emotion'])
+        # Use Label encoding for emotion
+        le = LabelEncoder()
+        dframe['emotion'] = le.fit_transform(df['emotion'])
 
-    print("*" * 100, "Column types", "*" * 100)
+        print("*" * 100, "Column types", "*" * 100)
 
-    # Change boolean columns to float (False = 0, True = 1)
-    for col in ['explicit', 'ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial', 'j-pop',
-                'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly',
-                'ska',
-                'sleep', 'soul']:
-        dframe[col] = dframe[col].astype(float)
-    print(dframe.dtypes)
+        # Change boolean columns to float (False = 0, True = 1)
+        for col in ['explicit', 'ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                    'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial',
+                    'j-pop',
+                    'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock', 'rockabilly',
+                    'ska',
+                    'sleep', 'soul']:
+            dframe[col] = dframe[col].astype(float)
+        print(dframe.dtypes)
 
-    return dframe, le
+        return dframe, le
+    else:
+        le = LabelEncoder()
+        dframe['emotion_le'] = le.fit_transform(df['emotion'])
+
+        import ast
+
+        # Convert the genres column from string to list
+        dframe['filtered_genres'] = dframe['filtered_genres'].apply(ast.literal_eval)
+
+        # Perform one-hot encoding on the genres column
+        genres_encoded = dframe['filtered_genres'].apply(lambda x: pd.Series([1] * len(x), index=x)).fillna(0)
+
+        # Concatenate the encoded genres with the original dataframe
+        dframe = pd.concat([dframe, genres_encoded], axis=1)
+
+        # NUMBER OF ARTISTS NUMBER OF GENRES
+        dframe['number_of_genres'] = dframe['genres'].str.split(',').str.len()
+        dframe['number_of_genres'] = dframe['number_of_genres'].fillna(0)
+        dframe['number_of_genres'] = dframe['number_of_genres'].astype(int)
+
+        return dframe
 
 
 def createHistogramsPartOne(X_train, time):
@@ -116,6 +139,7 @@ def createHistogramsPartOne(X_train, time):
     plt.show()
 
     return None
+
 
 def createPiechartsPartOne(X_train):
     # Piechart of explicit-----------
@@ -182,8 +206,6 @@ def restOfFirstPart(dframe):
 
     createHistogramsPartOne(X_train, "before")
     createPiechartsPartOne(X_train)
-
-
 
     # Scale data
     scaler = MinMaxScaler()
@@ -260,85 +282,264 @@ def restOfFirstPart(dframe):
     plt.show()
 
 
-# Popularity -> TOP GENRE
-# Certain GENRE -> loudness w/e
-# Liveness -> Loudness
-
-# comedy, speechiness, all
-def secondPart(dframe, dframeWe):
-
+def createCorrelationHeatmaps(dframe, dframeGen):
+    # DFRAME1 ----------------------------------------------------------------------------------------------------------
+    # ALL -> BASICS, TOP_GENRE, EMOTION (LE), EXPLICIT
     correlation_matrix = dframe.corr()
     plt.figure(figsize=(12, 11))
     plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
     plt.colorbar()
-    plt.title('Correlation Heatmap')
+    plt.title('Correlation Heatmap ALL(top_genre)')
     plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
     plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
     plt.show()
 
-    #ENERGY LOUDNESS
+    # ONLY -> TOP_GENRE
+    dframeEdit = dframe.drop(
+        ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists', 'explicit', 'emotion'], axis=1)
+    correlation_matrix = dframeEdit.corr()
+    plt.figure(figsize=(12, 11))
+    plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
+    plt.colorbar()
+    plt.title('Correlation Heatmap GENRE (top_genre)')
+    plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+    plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+    plt.show()
+
+    # DFRAME2 ----------------------------------------------------------------------------------------------------------
+    # ALL -> BASICS, FILTERED_GENRE, EMOTION_LE, EXPLICIT
+    dframeGenEdit = dframeGen.drop(['genres', 'filtered_genres', 'top_genre', 'emotion'], axis=1)
+    correlation_matrix = dframeGenEdit.corr()
+    plt.figure(figsize=(12, 11))
+    plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
+    plt.colorbar()
+    plt.title('Correlation Heatmap ALL (filtered_genres)')
+    plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+    plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+    plt.show()
+
+    # ONLY -> FILTERED_GENRE
+    dframeGenEdit = dframeGen.drop(
+        ['genres', 'filtered_genres', 'top_genre', 'emotion', 'danceability', 'energy', 'loudness', 'speechiness',
+         'acousticness', 'instrumentalness', 'liveness',
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists', 'number_of_genres', 'explicit'], axis=1)
+    correlation_matrix = dframeGenEdit.corr()
+    plt.figure(figsize=(12, 11))
+    plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
+    plt.colorbar()
+    plt.title('Correlation Heatmap GENRE (filtered_genres)')
+    plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+    plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+    plt.show()
+
+    return None
+
+
+def createAnalysisEnergyLoudness(dframeGen):
     plt.figure(figsize=(10, 6))
-    plt.scatter(dframe['energy'], dframe['loudness'], color='skyblue')
+    plt.scatter(dframeGen['energy'], dframeGen['loudness'], color='skyblue')
     plt.title('Scatter Plot')
     plt.xlabel('energy')
     plt.ylabel('loudness')
     plt.show()
 
-    # Define the number of intervals
     num_intervals = 12
+    dframeGen['energy_interval'] = pd.cut(dframeGen['energy'],
+                                          bins=np.linspace(dframeGen['energy'].min(), dframeGen['energy'].max(),
+                                                           num_intervals + 1))
+    average_energy = dframeGen.groupby('energy_interval')['loudness'].mean()
 
-    # Calculate the interval width
-    interval_width = (dframe['energy'].max() - dframe['energy'].min()) / num_intervals
-
-    # Group by speechiness intervals and calculate the average popularity for each group
-    dframe['energy_interval'] = pd.cut(dframe['energy'],
-                                            bins=np.linspace(dframe['energy'].min(), dframe['energy'].max(),
-                                                             num_intervals + 1))
-    average_energy = dframe.groupby('energy_interval')['loudness'].mean()
-
-    # Create a line plot
     plt.figure(figsize=(10, 6))
     plt.plot(average_energy.index.categories.mid, average_energy.values, marker='o', color='skyblue')
     plt.title('Average loudness vs. energy')
     plt.xlabel('energy')
-    plt.ylabel('Average Popularity')
-    plt.grid(True)
-    plt.show()
-
-    plt.figure(figsize=(10, 6))
-    plt.scatter(dframe['speechiness'], dframe['popularity'], color='skyblue')
-    plt.title('Scatter Plot')
-    plt.xlabel('speechiness')
-    plt.ylabel('popularity')
-    plt.show()
-
-    # Define the number of intervals
-    num_intervals = 12
-
-    # Calculate the interval width
-    interval_width = (dframe['speechiness'].max() - dframe['speechiness'].min()) / num_intervals
-
-    # Group by speechiness intervals and calculate the average popularity for each group
-    dframe['speechiness_interval'] = pd.cut(dframe['speechiness'],
-                                            bins=np.linspace(dframe['speechiness'].min(), dframe['speechiness'].max(),
-                                                             num_intervals + 1))
-    average_popularity = dframe.groupby('speechiness_interval')['popularity'].mean()
-
-    # Create a line plot
-    plt.figure(figsize=(10, 6))
-    plt.plot(average_popularity.index.categories.mid, average_popularity.values, marker='o', color='skyblue')
-    plt.title('Average Popularity vs. Speechiness')
-    plt.xlabel('Speechiness')
-    plt.ylabel('Average Popularity')
+    plt.ylabel('Average Loudness')
     plt.grid(True)
     plt.show()
 
     return None
 
 
+def createAnalysisLivenessSpeechiness(dframeGen):
+    plt.figure(figsize=(10, 6))
+    plt.scatter(dframeGen['liveness'], dframeGen['speechiness'], color='skyblue')
+    plt.title('Scatter Plot')
+    plt.xlabel('liveness')
+    plt.ylabel('speechiness')
+    plt.show()
+
+    num_intervals = 12
+    dframeGen['liveness_interval'] = pd.cut(dframeGen['liveness'],
+                                            bins=np.linspace(dframeGen['liveness'].min(), dframeGen['liveness'].max(),
+                                                             num_intervals + 1))
+    average_speechiness = dframeGen.groupby('liveness_interval')['speechiness'].mean()
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(average_speechiness.index.categories.mid, average_speechiness.values, marker='o', color='skyblue')
+    plt.title('Average speechiness vs. liveness')
+    plt.xlabel('liveness')
+    plt.ylabel('Average speechiness')
+    plt.grid(True)
+    plt.show()
+
+    return None
+
+
+def createAnalysisTempoTopGenre(dframeGen):
+    plt.figure(figsize=(10, 6))
+    plt.scatter(dframeGen['tempo'], dframeGen['top_genre'], color='skyblue')
+    plt.title('Scatter Plot')
+    plt.xlabel('tempo')
+    plt.ylabel('top_genre')
+    plt.show()
+
+    avg_bpm_per_genre = dframeGen.groupby('top_genre')['tempo'].mean().reset_index()
+    avg_bpm_per_genre = avg_bpm_per_genre.sort_values(by='tempo', ascending=False)
+
+    plt.figure(figsize=(16, 10))
+    plt.bar(avg_bpm_per_genre['top_genre'], avg_bpm_per_genre['tempo'], color='skyblue')
+    plt.title('Average BPM per Genre')
+    plt.xlabel('Genre')
+    plt.ylabel('Average BPM')
+    plt.xticks(rotation=45)
+    plt.show()
+
+    # Calculate means for each genre
+    means = [dframeGen['tempo'][dframeGen['top_genre'] == genre].mean() for genre in dframeGen['top_genre'].unique()]
+    # Create a dictionary to store genres and their means
+    genre_means = dict(zip(dframeGen['top_genre'].unique(), means))
+    # Sort genres based on mean values
+    sorted_genres = sorted(dframeGen['top_genre'].unique(), key=lambda genre: genre_means[genre])
+    # Create a boxplot
+    plt.figure(figsize=(15, 10))
+    plt.title('Tempo Distribution by Genre')
+    plt.xlabel('Genre')
+    plt.ylabel('Tempo (BPM)')
+    # Create the boxplot using the sorted genres
+    plt.boxplot([dframeGen['tempo'][dframeGen['top_genre'] == genre] for genre in sorted_genres],
+                labels=sorted_genres)
+    # Add means as red dots
+    sorted_means = [genre_means[genre] for genre in sorted_genres]
+    plt.plot(range(1, len(sorted_genres) + 1), sorted_means, 'rx')
+    # Show the plot
+    plt.xticks(rotation=45)
+    plt.show()
+
+    return None
+
+
+def generate_three_pie_charts(ax, labels, ratios, title):
+    ax.pie(ratios, labels=labels, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    ax.set_title(title)
+
+
+def createAnalysisTopGenreFilteredGenres(dframeGen):
+    dframeGenEdit = dframeGen[['forro', 'sertanejo', 'j-pop', 'anime', 'funk', 'soul']]
+    correlation_matrix = dframeGenEdit.corr()
+    plt.figure(figsize=(12, 11))
+    plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
+    plt.colorbar()
+    plt.title('Correlation Heatmap Selected Genres')
+    plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
+    plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
+    plt.show()
+    # Filter rows where only EDM is True
+    funk_only = dframeGen[(dframeGen['funk'] == True) & (dframeGen['soul'] == False)]
+    # Filter rows where only soul is True
+    soul_only = dframeGen[(dframeGen['funk'] == False) & (dframeGen['soul'] == True)]
+    # Filter rows where both funk and soul are True
+    funk_and_soul = dframeGen[(dframeGen['funk'] == True) & (dframeGen['soul'] == True)]
+    # Calculate ratios
+    funk_only_ratio = len(funk_only) / len(dframeGen)
+    soul_only_ratio = len(soul_only) / len(dframeGen)
+    funk_and_soul_ratio = len(funk_and_soul) / len(dframeGen)
+    # Filter rows where only forro is True
+    forro_only = dframeGen[(dframeGen['forro'] == True) & (dframeGen['sertanejo'] == False)]
+    # Filter rows where only sertanejo is True
+    sertanejo_only = dframeGen[(dframeGen['forro'] == False) & (dframeGen['sertanejo'] == True)]
+    # Filter rows where both forro and sertanejo are True
+    forro_and_sertanejo = dframeGen[(dframeGen['forro'] == True) & (dframeGen['sertanejo'] == True)]
+    # Calculate ratios
+    forro_only_ratio = len(forro_only) / len(dframeGen)
+    sertanejo_only_ratio = len(sertanejo_only) / len(dframeGen)
+    forro_and_sertanejo_ratio = len(forro_and_sertanejo) / len(dframeGen)
+    # Filter rows where only j-pop is True
+    jpop_only = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen['anime'] == False)]
+    # Filter rows where only anime is True
+    anime_only = dframeGen[(dframeGen['j-pop'] == False) & (dframeGen['anime'] == True)]
+    # Filter rows where both jpop and anime are True
+    jpop_and_anime = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen['anime'] == True)]
+    # Calculate ratios
+    jpop_only_ratio = len(jpop_only) / len(dframeGen)
+    anime_only_ratio = len(anime_only) / len(dframeGen)
+    jpop_and_anime_ratio = len(jpop_and_anime) / len(dframeGen)
+    # Create a figure with 1 row and 3 columns
+    fig, axes = plt.subplots(1, 3, figsize=(18, 7))
+    # Data for funk and soul
+    labels1 = ['Funk without Soul', 'Soul without Funk', 'Funk and Soul']
+    ratios1 = [funk_only_ratio, soul_only_ratio, funk_and_soul_ratio]
+    # Data for Forro and Sertanejo
+    labels2 = ['Forro without Sertanejo', 'Sertanejo without Forro', 'Forro and Sertanejo']
+    ratios2 = [forro_only_ratio, sertanejo_only_ratio, forro_and_sertanejo_ratio]
+    # Data for J-Pop and Anime
+    labels3 = ['J-pop without Anime', 'Anime without J-pop', 'J-pop and Anime']
+    ratios3 = [jpop_only_ratio, anime_only_ratio, jpop_and_anime_ratio]
+    # Generate pie charts
+    generate_three_pie_charts(axes[0], labels1, ratios1, 'Distribution of Funk and Soul')
+    generate_three_pie_charts(axes[1], labels2, ratios2, 'Distribution of Forro and Sertanejo')
+    generate_three_pie_charts(axes[2], labels3, ratios3, 'Distribution of J-Pop and Anime')
+    # Adjust layout
+    plt.tight_layout()
+    # Show the combined plot
+    plt.show()
+
+    return None
+
+
+def createAnalysisComedySpeechiness(dframeGen):
+    plt.scatter(dframeGen['comedy'], dframeGen['speechiness'])
+    plt.title("Correlation between Comedy and Speechiness")
+    plt.xlabel("Comedy")
+    plt.ylabel("Speechiness")
+    plt.show()
+
+    num_intervals = 20
+    plt.figure(figsize=(12, 11))
+    # Create intervals for speechiness
+    dframeGen['speechiness_interval'] = pd.cut(dframeGen['speechiness'], num_intervals)
+
+    # Calculate the proportion of comedy entries in each interval
+    grouped_data = dframeGen.groupby('speechiness_interval')['comedy'].mean()
+
+    # Plot a bar chart
+    plt.bar(range(len(grouped_data)), grouped_data, tick_label=grouped_data.index)
+
+    plt.xlabel('Speechiness Intervals')
+    plt.ylabel('Proportion of Comedy Entries')
+    plt.title('Proportion of Comedy Entries by Speechiness Intervals')
+
+    plt.xticks(rotation=45)
+    plt.show()
+
+
+def secondPart(dframe, dframeGen):
+    createCorrelationHeatmaps(dframe, dframeGen)
+    createAnalysisEnergyLoudness(dframeGen)
+    createAnalysisLivenessSpeechiness(dframeGen)
+    createAnalysisTempoTopGenre(dframeGen)
+    createAnalysisTopGenreFilteredGenres(dframeGen)
+    createAnalysisComedySpeechiness(dframeGen)
+    return None
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
-dfWe = handleOutliersAndMissingValues(dfWe)
+dfGen = handleOutliersAndMissingValues(dfGen, 1)
 df, le = encodeGenres(df)
-#restOfFirstPart(df)
-secondPart(df, dfWe)
+dfGen = encodeGenres(dfGen, 1)
+restOfFirstPart(df)
+df.to_csv('./data/zadanie1_top_genre.csv', index=False)
+dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
+secondPart(df, dfGen)
