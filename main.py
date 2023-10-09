@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from keras.src.layers import Dense
+from keras.src.optimizers import Adam
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -7,6 +9,9 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+import tensorflow as tf
+import keras
+from keras import layers, Sequential
 
 # Allow printing more columns
 pd.options.display.width = None
@@ -19,6 +24,7 @@ pd.set_option('mode.chained_assignment', None)
 
 df = pd.read_csv('./data/zadanie1_dataset.csv')
 dfGen = pd.read_csv('./data/zadanie1_dataset.csv')
+dfThird = pd.read_csv('./data/zadanie1_dataset.csv')
 
 
 # Functions ------------------------------------------------------------------------------------------------------------
@@ -99,7 +105,7 @@ def encodeGenres(dframe, mode=0):
         print(dframe.dtypes)
 
         return dframe, le
-    else:
+    elif mode == 1:
         le = LabelEncoder()
         dframe['emotion_le'] = le.fit_transform(df['emotion'])
 
@@ -119,6 +125,16 @@ def encodeGenres(dframe, mode=0):
         dframe['number_of_genres'] = dframe['number_of_genres'].fillna(0)
         dframe['number_of_genres'] = dframe['number_of_genres'].astype(int)
 
+        return dframe
+    else:
+        dframe = pd.get_dummies(dframe, columns=['top_genre'], prefix='', prefix_sep='')
+        dframe = pd.get_dummies(dframe, columns=['emotion'], prefix='', prefix_sep='')
+        # Change boolean columns to float (False = 0, True = 1)
+        for col in ['explicit', 'ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                    'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial',
+                    'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock',
+                    'rockabilly', 'ska', 'sleep', 'soul', 'calm', 'energetic', 'happy', 'sad']:
+            dframe[col] = dframe[col].astype(float)
         return dframe
 
 
@@ -534,12 +550,79 @@ def secondPart(dframe, dframeGen):
     return None
 
 
+def thirdPart(dframe):
+    X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
+    y = dframe[['happy', 'sad', 'calm', 'energetic']]
+
+    # Split dataset into train, valid and test
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=42)
+
+    # Scale the data
+    scaler = MinMaxScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    # Convert numpy arrays to pandas DataFrames
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    # Train MLP model in Keras
+    model = Sequential()
+    model.add(Dense(24, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(40, activation='relu'))
+    model.add(Dense(4, activation='softmax'))
+
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.002), metrics=['accuracy'])
+
+    history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=100, batch_size=32)
+
+    # Evaluate the model
+    test_scores = model.evaluate(X_test, y_test, verbose=0)
+
+    print("*" * 100, "Test accuracy", "*" * 100)
+    print(f"Test accuracy: {test_scores[1]:.4f}")
+
+    # Plot confusion matrix
+    y_pred = model.predict(X_test)
+    y_pred = np.argmax(y_pred, axis=1)  # Convert probabilities to class labels
+
+    # Create class names for confusion matrix
+    class_names = dframe[['happy', 'sad', 'calm', 'energetic']].columns.tolist()
+
+    cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    # Plot loss and accuracy
+    plt.plot(history.history['loss'], label='train_loss')
+    plt.plot(history.history['val_loss'], label='val_loss')
+    plt.legend()
+    plt.show()
+
+    plt.plot(history.history['accuracy'], label='train_accuracy')
+    plt.plot(history.history['val_accuracy'], label='val_accuracy')
+    plt.legend()
+    plt.show()
+    return None
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
+dfThird = handleOutliersAndMissingValues(dfThird)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
 df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
-restOfFirstPart(df)
-df.to_csv('./data/zadanie1_top_genre.csv', index=False)
-dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
-secondPart(df, dfGen)
+dfThird = encodeGenres(dfThird, 2)
+# restOfFirstPart(df)
+thirdPart(dfThird)
+#df.to_csv('./data/zadanie1_top_genre.csv', index=False)
+#dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
+#dfThird.to_csv('./data/zadanie1_all_genres_all_emotions.csv', index=False)
