@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from keras.src.callbacks import EarlyStopping
 from keras.src.layers import Dense
 from keras.src.optimizers import Adam
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
@@ -550,7 +551,7 @@ def secondPart(dframe, dframeGen):
     return None
 
 
-def thirdPartOverTrain(dframe):
+def thirdPartOvertrain(dframe):
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
     y = dframe[['happy', 'sad', 'calm', 'energetic']]
 
@@ -582,6 +583,91 @@ def thirdPartOverTrain(dframe):
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0005), metrics=['accuracy'])
 
     history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=175, batch_size=32)
+
+    # Evaluate the model
+    test_scores = model.evaluate(X_test, y_test, verbose=0)
+    train_scores = model.evaluate(X_train, y_train, verbose=0)
+
+    print("*" * 100, "Test accuracy", "*" * 100)
+    print(f"Test accuracy: {test_scores[1]:.4f}")
+
+    print("*" * 100, "Train accuracy", "*" * 100)
+    print(f"Train accuracy: {train_scores[1]:.4f}")
+
+    # Plot confusion matrix
+    y_pred_test = model.predict(X_test)
+    y_pred_test = np.argmax(y_pred_test, axis=1)  # Convert probabilities to class labels
+
+    y_pred_train = model.predict(X_train)
+    y_pred_train = np.argmax(y_pred_train, axis=1)  # Convert probabilities to class labels
+
+    class_names = dframe[['happy', 'sad', 'calm', 'energetic']].columns.tolist()
+
+    cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred_test)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on train set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    # Plot loss and accuracy
+    plt.plot(history.history['loss'], label='train_loss')
+    plt.plot(history.history['val_loss'], label='val_loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Error/Loss')
+    plt.legend()
+    plt.show()
+
+    plt.plot(history.history['accuracy'], label='train_accuracy')
+    plt.plot(history.history['val_accuracy'], label='val_accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.show()
+    return None
+
+def thirdPartOvertrainButEarlyStoping(dframe):
+    X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
+    y = dframe[['happy', 'sad', 'calm', 'energetic']]
+
+    # Split dataset into train, valid and test
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=42)
+
+    # Scale the data
+    scaler = MinMaxScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    # Convert numpy arrays to pandas DataFrames
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    # Train MLP model in Keras
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    model = Sequential()
+    model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(4, activation='softmax'))
+
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0005), metrics=['accuracy'])
+
+    history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=175, batch_size=32, callbacks=[early_stopping])
 
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
@@ -718,7 +804,8 @@ df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
 # restOfFirstPart(df)
-thirdPartOverTrain(dfThird)
+thirdPartOvertrain(dfThird)
+thirdPartOvertrainButEarlyStoping(dfThird)
 # df.to_csv('./data/zadanie1_top_genre.csv', index=False)
 # dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
 # dfThird.to_csv('./data/zadanie1_all_genres_all_emotions.csv', index=False)
