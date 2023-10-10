@@ -573,22 +573,25 @@ def thirdPartOverTrain(dframe):
     # Train MLP model in Keras
     model = Sequential()
     model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-    model.add(Dense(400, activation='relu'))
-    model.add(Dense(400, activation='relu'))
-    model.add(Dense(400, activation='relu'))
-    model.add(Dense(400, activation='relu'))
-    model.add(Dense(400, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
     model.add(Dense(4, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0003), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0005), metrics=['accuracy'])
 
-    history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=100, batch_size=32)
+    history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=175, batch_size=32)
 
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
+    train_scores = model.evaluate(X_train, y_train, verbose=0)
 
     print("*" * 100, "Test accuracy", "*" * 100)
     print(f"Test accuracy: {test_scores[1]:.4f}")
+
+    print("*" * 100, "Train accuracy", "*" * 100)
+    print(f"Train accuracy: {train_scores[1]:.4f}")
 
     # Plot confusion matrix
     y_pred_test = model.predict(X_test)
@@ -618,11 +621,15 @@ def thirdPartOverTrain(dframe):
     # Plot loss and accuracy
     plt.plot(history.history['loss'], label='train_loss')
     plt.plot(history.history['val_loss'], label='val_loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Error/Loss')
     plt.legend()
     plt.show()
 
     plt.plot(history.history['accuracy'], label='train_accuracy')
     plt.plot(history.history['val_accuracy'], label='val_accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
     plt.legend()
     plt.show()
     return None
