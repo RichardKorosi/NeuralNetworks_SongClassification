@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from keras.src.callbacks import EarlyStopping
 from keras.src.layers import Dense
-from keras.src.optimizers import Adam
+from keras.src.optimizers import Adam, SGD
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
@@ -573,22 +573,23 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
 
     # Train MLP model in Keras
     if mode == 'early_stop':
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     model = Sequential()
     model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
     model.add(Dense(100, activation='relu'))
     model.add(Dense(100, activation='relu'))
     model.add(Dense(100, activation='relu'))
     model.add(Dense(100, activation='relu'))
+    model.add(Dense(100, activation='relu'))
     model.add(Dense(4, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0005), metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
 
     if mode == 'early_stop':
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=175, batch_size=32,
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     else:
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=175, batch_size=32)
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30)
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
     train_scores = model.evaluate(X_train, y_train, verbose=0)
@@ -641,6 +642,172 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
     return None
 
 
+def thirdPartLast(dframe, mode):
+    X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
+    y = dframe[['happy', 'sad', 'calm', 'energetic']]
+
+    # Split dataset into train, valid and test
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=42)
+
+    # Scale the data
+    scaler = MinMaxScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    # Convert numpy arrays to pandas DataFrames
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    #Original
+    # 7 layers (45, 100, 100, 100, 100, 100, 4)
+    # ADAM (0.0002)
+    # Early stopping patience (5)
+    # Epochs 200
+
+
+    if mode == 'prvy':
+        # 4 hidden layers (45, 100, 100, 100)
+        # ADAM (0.0002)
+        # Early stopping patience (5)
+        # Epochs 200
+
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'druhy':
+        # 4 hidden layers (45, 100, 100, 100)
+        # ADAM (0.0002)
+        # Early stopping patience (15)
+        # Epochs 200
+
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy',  optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'treti':
+        # 4 hidden layers (45, 100, 100, 100)
+        # ADAM (0.00005)
+        # Early stopping patience (15)
+        # Epochs 200
+
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'stvrty':
+        # 4 hidden layers (45, 100, 100, 100)
+        # SGD (0.00005)
+        # Early stopping patience (15)
+        # Epochs 200
+
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.00005, momentum=0.9), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'piaty':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+
+    # Evaluate the model
+    test_scores = model.evaluate(X_test, y_test, verbose=0)
+    train_scores = model.evaluate(X_train, y_train, verbose=0)
+
+    print("*" * 100, "Test and Train accuracy", "*" * 20)
+    print(f"Test accuracy: {test_scores[1]:.4f}")
+    print(f"Train accuracy: {train_scores[1]:.4f}")
+
+    # Plot confusion matrix
+    y_pred_test = model.predict(X_test)
+    y_pred_test = np.argmax(y_pred_test, axis=1)  # Convert probabilities to class labels
+
+    y_pred_train = model.predict(X_train)
+    y_pred_train = np.argmax(y_pred_train, axis=1)  # Convert probabilities to class labels
+
+    class_names = dframe[['happy', 'sad', 'calm', 'energetic']].columns.tolist()
+
+    cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred_test)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on train set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    # Plot loss and accuracy
+    plt.plot(history.history['loss'], label='train_loss')
+    plt.plot(history.history['val_loss'], label='val_loss')
+    plt.title('Loss/Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
+    plt.plot(history.history['accuracy'], label='train_accuracy')
+    plt.plot(history.history['val_accuracy'], label='val_accuracy')
+    plt.title('Accuracy/Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.show()
+
+    return None
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfThird = handleOutliersAndMissingValues(dfThird)
@@ -649,8 +816,13 @@ df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
 # restOfFirstPart(df)
-thirdPartOvertrain(dfThird)
+#thirdPartOvertrain(dfThird)
 thirdPartOvertrain(dfThird, 'early_stop')
+# thirdPartLast(dfThird, 'prvy')
+# thirdPartLast(dfThird, 'druhy')
+# thirdPartLast(dfThird, 'treti')
+#thirdPartLast(dfThird, 'stvrty')
+# thirdPartLast(dfThird, 'piaty')
 # df.to_csv('./data/zadanie1_top_genre.csv', index=False)
 # dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
 # dfThird.to_csv('./data/zadanie1_all_genres_all_emotions.csv', index=False)
