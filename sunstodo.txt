@@ -1,0 +1,3 @@
+otazky
+dokumentacia reread,rewrite
+upravit learningrate nech su krajsie data
