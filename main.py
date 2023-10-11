@@ -742,13 +742,16 @@ def thirdPartLast(dframe, mode):
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     if mode == 'piaty':
+        # 4 hidden layers (45, 25, 25)
+        # ADAM (0.00005)
+        # Early stopping patience (15)
+        # Epochs 200
         # Train MLP model in Keras
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
+        model.add(Dense(25, activation='relu'))
+        model.add(Dense(25, activation='relu'))
         model.add(Dense(4, activation='softmax'))
 
         model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
@@ -822,7 +825,7 @@ thirdPartOvertrain(dfThird, 'early_stop')
 # thirdPartLast(dfThird, 'druhy')
 # thirdPartLast(dfThird, 'treti')
 #thirdPartLast(dfThird, 'stvrty')
-# thirdPartLast(dfThird, 'piaty')
+thirdPartLast(dfThird, 'piaty')
 # df.to_csv('./data/zadanie1_top_genre.csv', index=False)
 # dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
 # dfThird.to_csv('./data/zadanie1_all_genres_all_emotions.csv', index=False)
