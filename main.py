@@ -16,17 +16,19 @@ from keras import layers, Sequential
 from imblearn.over_sampling import SMOTE
 
 # ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
+# ======================================================================================================================
 # Zdrojove kody z cviceni:
 #   Autor: Ing. Vanesa Andicsová
 #   Subory:
 #       seminar2.py
 #       main.py
-
-# Grafy:
-# Grafy boli generovane za pomoci ChatGPT a GithubCopilota
+# ======================================================================================================================
+# Grafy, Pomocne funkcie, SMOTE...:
 #  Autor: Github Copilot, ChatGPT
+#  Grafy boli generovane za pomoci ChatGPT a GithubCopilota
+# ======================================================================================================================
 
-# Uvod ------------------------------------------------------------------------------------------------------------------
+# Uvod -----------------------------------------------------------------------------------------------------------------
 # Uvod bol inspirovany zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
 
 pd.options.display.width = None
@@ -803,9 +805,10 @@ def bonusThird(dframe):
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
     X_resampled, y_resampled = smote.fit_resample(X_train.values, y_train.values)
+    X_resampled = pd.DataFrame(X_resampled, columns=X.columns)
 
     # Train MLP model in Keras
-    early_stopping = EarlyStopping(monitor='val_loss', patience=50, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     model = Sequential()
     model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
     model.add(Dense(150, activation='relu'))
@@ -814,12 +817,12 @@ def bonusThird(dframe):
 
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001),
                   metrics=['accuracy'])
-    history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+    history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=100, batch_size=30,
                         callbacks=[early_stopping])
 
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
-    train_scores = model.evaluate(X_resampled, X_resampled, verbose=0)
+    train_scores = model.evaluate(X_resampled, y_resampled, verbose=0)
 
     print("*" * 100, "Test and Train accuracy", "*" * 20)
     print(f"Test accuracy: {test_scores[1]:.4f}")
@@ -846,7 +849,7 @@ def bonusThird(dframe):
     plt.xticks(rotation=45)
     plt.show()
 
-    cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
+    cm = confusion_matrix(np.argmax(y_resampled.values, axis=1), y_pred_train)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     fig, ax = plt.subplots(figsize=(10, 10))
     disp.plot(ax=ax)
