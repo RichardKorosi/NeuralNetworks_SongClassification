@@ -3,8 +3,9 @@ import numpy as np
 from keras.src.callbacks import EarlyStopping
 from keras.src.layers import Dense
 from keras.src.optimizers import Adam, SGD
+from sklearn.feature_selection import RFE
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -14,7 +15,6 @@ import tensorflow as tf
 import keras
 from keras import layers, Sequential
 from imblearn.over_sampling import SMOTE
-from sklearn.utils import compute_class_weight
 
 # ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
 # ======================================================================================================================
@@ -904,24 +904,103 @@ def bonusThird(dframe, mode=0):
 
 
 def reduceDataframe(dframe):
-    # Convert the columns to boolean values
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                            'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
                            'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
                            'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
 
-    # Apply the logical OR operation
     filtered_df = dframe[bool_columns.any(axis=1)]
 
-    # Group by the result columns and sample 200 rows from each group
     sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
         lambda x: x.sample(min(len(x), 200)))
 
-    # Reset index
     sampled_df = sampled_df.reset_index(drop=True)
 
     return sampled_df
 
+
+def gridSearch(dframe):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+
+    X = dframe.drop(columns=['emotion'])
+    y = dframe['emotion']
+
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=42)
+
+    scaler = MinMaxScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    # Define parameter grid for grid search
+    param_grid = {
+        'hidden_layer_sizes': [
+            (100,), (200,), (300,),  # Single hidden layer
+            (100, 100), (200, 200), (300, 300),  # Two hidden layers
+            (100, 100, 100), (200, 200, 200)
+        ],
+        'max_iter': [100, 150],  # Different max iterations
+    }
+
+    # Initialize the classifier
+    clf = MLPClassifier(random_state=1, early_stopping=True)
+
+    # Create GridSearchCV object
+    grid_search = GridSearchCV(clf, param_grid, cv=3, n_jobs=-1)
+
+    # Perform grid search
+    grid_search.fit(X_train, y_train)
+
+    # Get the best parameters and estimator from grid search
+    best_params = grid_search.best_params_
+    best_clf = grid_search.best_estimator_
+    best_estimator = grid_search.best_estimator_
+    x = grid_search.param_grid
+
+
+    # Train with best parameters
+    best_clf.fit(X_train, y_train)
+
+    # Print the best parameters
+    print("Best Parameters:", best_params)
+    print("Best Parameters:", best_estimator)
+    print("Param grid:", x)
+    # Print Results and confusion matrix of results for train set
+    y_pred_train = best_clf.predict(X_train)
+    print('MLP accuracy on train set: ', accuracy_score(y_train, y_pred_train))
+    cm_train = confusion_matrix(y_train, y_pred_train)
+
+    # Print Results and confusion matrix of results for test set
+    y_pred_test = best_clf.predict(X_test)
+    print('MLP accuracy on test set: ', accuracy_score(y_test, y_pred_test))
+    cm_test = confusion_matrix(y_test, y_pred_test)
+
+    class_names = list(le.inverse_transform(best_clf.classes_))
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm_train, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on train set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm_test, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    return None
 
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
@@ -931,11 +1010,12 @@ df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
 # restOfFirstPart(df)
+gridSearch(df)
 # secondPart(df, dfGen)
 # thirdPartOvertrain(dfThird)
 # thirdPartOvertrain(dfThird, 'early_stop')
 # thirdPartLast(dfThird, 'prvy')
-#bonusThird(dfThird)
-#bonusThird(dfThird, 1)
-reducedDataframe = reduceDataframe(dfThird)
-bonusThird(reducedDataframe)
+# bonusThird(dfThird)
+# bonusThird(dfThird, 1)
+# reducedDataframe = reduceDataframe(dfThird)
+# bonusThird(reducedDataframe)
