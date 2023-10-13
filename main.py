@@ -322,7 +322,8 @@ def createCorrelationHeatmaps(dframe, dframeGen):
     dframeGenEdit = dframeGen.drop(
         ['genres', 'filtered_genres', 'top_genre', 'emotion', 'danceability', 'energy', 'loudness', 'speechiness',
          'acousticness', 'instrumentalness', 'liveness',
-         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists', 'number_of_genres', 'explicit'], axis=1)
+         'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists', 'number_of_genres', 'explicit',
+         'emotion_le'], axis=1)
     correlation_matrix = dframeGenEdit.corr()
     plt.figure(figsize=(12, 11))
     plt.imshow(correlation_matrix, cmap='viridis', interpolation='none')
@@ -459,8 +460,34 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
 
     funk_and_soul = dframeGen[(dframeGen['funk'] == True) & (dframeGen['soul'] == True)]
 
-    funk_only_ratio = len(funk_only) / len(dframeGen)
-    soul_only_ratio = len(soul_only) / len(dframeGen)
+    funk_alone = dframeGen[(dframeGen['funk'] == True) & (dframeGen[
+                                                              ['edm', 'house', 'country', 'pop', 'rock', 'soul', 'folk',
+                                                               'metal', 'grunge', 'metalcore', 'punk',
+                                                               'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
+                                                               'forro', 'sertanejo', 'industrial', 'hardstyle',
+                                                               'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
+                                                               'ambient', 'classical', 'disco', 'rockabilly',
+                                                               'sleep', 'j-pop', 'anime', 'afrobeat', 'electro',
+                                                               'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
+                                                               'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                               'gospel']] == 0).all(axis=1)]
+
+    soul_alone = dframeGen[(dframeGen['soul'] == True) & (dframeGen[
+                                                              ['edm', 'house', 'country', 'pop', 'rock', 'funk', 'folk',
+                                                               'metal', 'grunge', 'metalcore', 'punk',
+                                                               'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
+                                                               'forro', 'sertanejo', 'industrial', 'hardstyle',
+                                                               'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
+                                                               'ambient', 'classical', 'disco', 'rockabilly',
+                                                               'sleep', 'j-pop', 'anime', 'afrobeat', 'electro',
+                                                               'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
+                                                               'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                               'gospel']] == 0).all(axis=1)]
+
+    funk_alone_ratio = len(funk_alone) / len(dframeGen)
+    funk_only_ratio = len(funk_only) / len(dframeGen) - funk_alone_ratio
+    soul_alone_ratio = len(soul_alone) / len(dframeGen)
+    soul_only_ratio = len(soul_only) / len(dframeGen) - soul_alone_ratio
     funk_and_soul_ratio = len(funk_and_soul) / len(dframeGen)
 
     forro_only = dframeGen[(dframeGen['forro'] == True) & (dframeGen['sertanejo'] == False)]
@@ -485,8 +512,8 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 7))
 
-    labels1 = ['Funk without Soul', 'Soul without Funk', 'Funk and Soul']
-    ratios1 = [funk_only_ratio, soul_only_ratio, funk_and_soul_ratio]
+    labels1 = ['Soul alone', 'Soul with others', 'Funk alone', 'Funk with others', 'Funk and Soul' ]
+    ratios1 = [soul_alone_ratio, soul_only_ratio, funk_alone_ratio, funk_only_ratio, funk_and_soul_ratio,  ]
 
     labels2 = ['Forro without Sertanejo', 'Sertanejo without Forro', 'Forro and Sertanejo']
     ratios2 = [forro_only_ratio, sertanejo_only_ratio, forro_and_sertanejo_ratio]
@@ -532,12 +559,12 @@ def createAnalysisComedySpeechiness(dframeGen):
 
 
 def secondPart(dframe, dframeGen):
-    createCorrelationHeatmaps(dframe, dframeGen)
-    createAnalysisEnergyLoudness(dframeGen)
-    createAnalysisLivenessSpeechiness(dframeGen)
-    createAnalysisTempoTopGenre(dframeGen)
+    # createCorrelationHeatmaps(dframe, dframeGen)
+    # createAnalysisEnergyLoudness(dframeGen)
+    # createAnalysisLivenessSpeechiness(dframeGen)
+    # createAnalysisTempoTopGenre(dframeGen)
     createAnalysisTopGenreFilteredGenres(dframeGen)
-    createAnalysisComedySpeechiness(dframeGen)
+    # createAnalysisComedySpeechiness(dframeGen)
     return None
 
 
@@ -966,7 +993,6 @@ def gridSearch(dframe):
     best_estimator = grid_search.best_estimator_
     x = grid_search.param_grid
 
-
     # Train with best parameters
     best_clf.fit(X_train, y_train)
 
@@ -1002,6 +1028,7 @@ def gridSearch(dframe):
 
     return None
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
@@ -1010,8 +1037,8 @@ df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
 # restOfFirstPart(df)
-gridSearch(df)
-# secondPart(df, dfGen)
+# gridSearch(df)
+secondPart(df, dfGen)
 # thirdPartOvertrain(dfThird)
 # thirdPartOvertrain(dfThird, 'early_stop')
 # thirdPartLast(dfThird, 'prvy')
