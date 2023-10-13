@@ -162,7 +162,7 @@ def createHistogramsPartOne(X_train, time):
 
 
 def createPiechartsPartOne(X_train):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     # Piechart of explicit
     sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=True)
@@ -277,7 +277,7 @@ def restOfFirstPart(dframe):
 
 
 def createCorrelationHeatmaps(dframe, dframeGen):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     # DFRAME1
     # ALL -> BASICS, TOP_GENRE, EMOTION (LE), EXPLICIT
@@ -333,7 +333,7 @@ def createCorrelationHeatmaps(dframe, dframeGen):
 
 
 def createAnalysisEnergyLoudness(dframeGen):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     plt.figure(figsize=(10, 6))
     plt.scatter(dframeGen['energy'], dframeGen['loudness'], color='skyblue')
@@ -360,7 +360,7 @@ def createAnalysisEnergyLoudness(dframeGen):
 
 
 def createAnalysisLivenessSpeechiness(dframeGen):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     plt.figure(figsize=(10, 6))
     plt.scatter(dframeGen['liveness'], dframeGen['speechiness'], color='skyblue')
@@ -387,7 +387,7 @@ def createAnalysisLivenessSpeechiness(dframeGen):
 
 
 def createAnalysisTempoTopGenre(dframeGen):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     plt.figure(figsize=(10, 6))
     plt.scatter(dframeGen['tempo'], dframeGen['top_genre'], color='skyblue')
@@ -430,7 +430,7 @@ def createAnalysisTempoTopGenre(dframeGen):
 
 
 def generate_three_pie_charts(ax, labels, ratios, title):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     ax.pie(ratios, labels=labels, autopct='%1.1f%%', startangle=90)
     ax.axis('equal')
@@ -438,7 +438,7 @@ def generate_three_pie_charts(ax, labels, ratios, title):
 
 
 def createAnalysisTopGenreFilteredGenres(dframeGen):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     dframeGenEdit = dframeGen[['forro', 'sertanejo', 'j-pop', 'anime', 'funk', 'soul']]
     correlation_matrix = dframeGenEdit.corr()
@@ -503,7 +503,7 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
 
 
 def createAnalysisComedySpeechiness(dframeGen):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     plt.scatter(dframeGen['comedy'], dframeGen['speechiness'])
     plt.title("Correlation between Comedy and Speechiness")
@@ -626,7 +626,7 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
 
 
 def thirdPartLast(dframe, mode):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
     y = dframe[['happy', 'sad', 'calm', 'energetic']]
@@ -776,7 +776,8 @@ def thirdPartLast(dframe, mode):
 
 
 def bonusThird(dframe):
-    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                              'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
@@ -801,7 +802,7 @@ def bonusThird(dframe):
     X_valid = pd.DataFrame(X_valid, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
-    X_resampled, y_resampled = smote.fit_resample(X_train, y_train.values)
+    X_resampled, y_resampled = smote.fit_resample(X_train.values, y_train.values)
 
     # Train MLP model in Keras
     early_stopping = EarlyStopping(monitor='val_loss', patience=50, restore_best_weights=True)
@@ -818,7 +819,7 @@ def bonusThird(dframe):
 
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
-    train_scores = model.evaluate(X_train, y_train, verbose=0)
+    train_scores = model.evaluate(X_resampled, X_resampled, verbose=0)
 
     print("*" * 100, "Test and Train accuracy", "*" * 20)
     print(f"Test accuracy: {test_scores[1]:.4f}")
@@ -828,7 +829,7 @@ def bonusThird(dframe):
     y_pred_test = model.predict(X_test)
     y_pred_test = np.argmax(y_pred_test, axis=1)
 
-    y_pred_train = model.predict(X_train)
+    y_pred_train = model.predict(X_resampled)
     y_pred_train = np.argmax(y_pred_train, axis=1)
 
     class_names = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
