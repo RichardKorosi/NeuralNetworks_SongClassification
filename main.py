@@ -13,64 +13,72 @@ from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDis
 import tensorflow as tf
 import keras
 from keras import layers, Sequential
+from imblearn.over_sampling import SMOTE
 
-# Allow printing more columns
+# ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
+# Zdrojove kody z cviceni:
+#   Autor: Ing. Vanesa Andicsová
+#   Subory:
+#       seminar2.py
+#       main.py
+
+# Grafy:
+# Grafy boli generovane za pomoci ChatGPT a GithubCopilota
+#  Autor: Github Copilot, ChatGPT
+
+# Uvod ------------------------------------------------------------------------------------------------------------------
+# Uvod bol inspirovany zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+
 pd.options.display.width = None
 pd.options.display.max_columns = None
 pd.set_option('display.max_rows', 3000)
 pd.set_option('display.max_columns', 3000)
 
-# Do not show pandas warnings
 pd.set_option('mode.chained_assignment', None)
 
 df = pd.read_csv('./data/zadanie1_dataset.csv')
 dfGen = pd.read_csv('./data/zadanie1_dataset.csv')
 dfThird = pd.read_csv('./data/zadanie1_dataset.csv')
+dfBonus = pd.read_csv('./data/zadanie1_dataset.csv')
 
 
 # Functions ------------------------------------------------------------------------------------------------------------
 def handleOutliersAndMissingValues(dframe, mode=0):
-    # Handle outliers (0,5b)
-    # -----------------------------------------------------------------------------------------------
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
 
-    # Print min and max values of columns before removing outliers
+    # Handle outliers
     print("*" * 100, "Before removing outliers", "*" * 100)
     print("-" * 10, "Min", "-" * 10)
     print(dframe.min(numeric_only=True))
     print("-" * 10, "Max", "-" * 10)
     print(dframe.max(numeric_only=True))
 
-    dframe = dframe[(dframe['danceability'] >= 0) & (dframe['danceability'] <= 1)]  # Some values were higher than 1
+    dframe = dframe[(dframe['danceability'] >= 0) & (dframe['danceability'] <= 1)]
     dframe = dframe[(dframe['loudness'] >= -60) & (
-            dframe['loudness'] <= 5)]  # Range should be <-60, 0>, one value is slightly above 0
-    dframe = dframe[(dframe['tempo'] > 0)]  # Some outliers found with 0 tempo
+            dframe['loudness'] <= 5)]
+    dframe = dframe[(dframe['tempo'] > 0)]
     dframe = dframe[(dframe['duration_ms'] > 20000) & (
-            dframe['duration_ms'] <= 1967400)]  # Some outliers found (last one is long but valid)
+            dframe['duration_ms'] <= 1967400)]
 
-    # Print min and max values of columns
     print("*" * 100, "After removing outliers", "*" * 100)
     print("-" * 10, "Min", "-" * 10)
     print(dframe.min(numeric_only=True))
     print("-" * 10, "Max", "-" * 10)
     print(dframe.max(numeric_only=True))
 
-    # Handle missing values (0,5b)
-    # -----------------------------------------------------------------------------------------
-
-    # Count missing values in columns
+    # Handle missing values
     print("*" * 100, "Missing values", "*" * 100)
     print(f"Length of dataset: {len(dframe)}")
     print(dframe.isnull().sum())
 
-    # Deal with missing values and columns with no use
     if mode == 0:
         dframe = dframe.dropna(
-            subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
-        dframe = dframe.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)  # Drop columns with no use
+            subset=['top_genre', 'popularity', 'number_of_artists'])
+        dframe = dframe.drop(['name', 'url', 'genres', 'filtered_genres'], axis=1)
     else:
         dframe = dframe.dropna(
-            subset=['top_genre', 'popularity', 'number_of_artists'])  # Drop rows with missing values in certain columns
-        dframe = dframe.drop(['name', 'url'], axis=1)  # Drop columns with no use
+            subset=['top_genre', 'popularity', 'number_of_artists'])
+        dframe = dframe.drop(['name', 'url'], axis=1)
 
     print("*" * 100, "Missing values after removing them", "*" * 100)
     print(f"Length of dataset: {len(dframe)}")
@@ -80,22 +88,20 @@ def handleOutliersAndMissingValues(dframe, mode=0):
 
 
 def encodeGenres(dframe, mode=0):
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+
     if mode == 0:
-        # Column types and encoding (0,5b)
-        # ------------------------------------------------------------------------------------ Print column types
+        # Column types and encoding
         print("*" * 100, "Column types", "*" * 100)
         print(dframe.dtypes)
 
-        # Use dummy encoding for top_genre
         dframe = pd.get_dummies(dframe, columns=['top_genre'], prefix='', prefix_sep='')
 
-        # Use Label encoding for emotion
         le = LabelEncoder()
         dframe['emotion'] = le.fit_transform(df['emotion'])
 
         print("*" * 100, "Column types", "*" * 100)
 
-        # Change boolean columns to float (False = 0, True = 1)
         for col in ['explicit', 'ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                     'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial',
                     'j-pop',
@@ -112,16 +118,12 @@ def encodeGenres(dframe, mode=0):
 
         import ast
 
-        # Convert the genres column from string to list
         dframe['filtered_genres'] = dframe['filtered_genres'].apply(ast.literal_eval)
 
-        # Perform one-hot encoding on the genres column
         genres_encoded = dframe['filtered_genres'].apply(lambda x: pd.Series([1] * len(x), index=x)).fillna(0)
 
-        # Concatenate the encoded genres with the original dataframe
         dframe = pd.concat([dframe, genres_encoded], axis=1)
 
-        # NUMBER OF ARTISTS NUMBER OF GENRES
         dframe['number_of_genres'] = dframe['genres'].str.split(',').str.len()
         dframe['number_of_genres'] = dframe['number_of_genres'].fillna(0)
         dframe['number_of_genres'] = dframe['number_of_genres'].astype(int)
@@ -130,7 +132,7 @@ def encodeGenres(dframe, mode=0):
     else:
         dframe = pd.get_dummies(dframe, columns=['top_genre'], prefix='', prefix_sep='')
         dframe = pd.get_dummies(dframe, columns=['emotion'], prefix='', prefix_sep='')
-        # Change boolean columns to float (False = 0, True = 1)
+
         for col in ['explicit', 'ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                     'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house', 'industrial',
                     'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk', 'reggaeton', 'rock',
@@ -140,15 +142,16 @@ def encodeGenres(dframe, mode=0):
 
 
 def createHistogramsPartOne(X_train, time):
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+
     attributes = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
                   'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']
 
     X_train[attributes].hist(bins=70, figsize=(15, 15))
 
-    # Loop through each subplot and set labels
     for ax in plt.gcf().get_axes():
-        ax.set_xlabel('Hodnota')  # Set x-axis label to "hodnota"
-        ax.set_ylabel('Počet')  # Set y-axis label to "pocet"
+        ax.set_xlabel('Hodnota')
+        ax.set_ylabel('Počet')
     if time == "before":
         plt.suptitle('Histograms before scaling/standardizing')
     else:
@@ -159,7 +162,9 @@ def createHistogramsPartOne(X_train, time):
 
 
 def createPiechartsPartOne(X_train):
-    # Piechart of explicit-----------
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    # Piechart of explicit
     sizes = (X_train['explicit'].value_counts() / len(X_train['explicit'])).sort_values(ascending=True)
     plt.figure(figsize=(15, 15))
     plt.title(f'Explicit [{len(X_train)}]')
@@ -171,7 +176,7 @@ def createPiechartsPartOne(X_train):
     plt.legend(labels=percentages, title="True/False:Percento", loc='center', bbox_to_anchor=(1, 0.5), fontsize='large')
     plt.show()
 
-    # Piechart of genres-------
+    # Piechart of genres
     sizes = (
         X_train[
             ['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall', 'disco', 'edm',
@@ -189,22 +194,16 @@ def createPiechartsPartOne(X_train):
 
 
 def restOfFirstPart(dframe):
-    # Split dataset into X and y (input and output) (1b)
-    # -------------------------------------------------------------------
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
 
-    # Split dataset into X and y
     X = dframe.drop(columns=['emotion'])
     y = dframe['emotion']
 
-    # Split dataset into train, valid and test
     X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
     X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
                                                         random_state=42)
 
-    # Scale and standardize data (0,5b)
-    # ------------------------------------------------------------------------------------
-
-    # Print dataset shapes
+    # Scale and standardize data
     print("*" * 100, "Dataset shapes", "*" * 100)
     print(f"Full dataset: {dframe.shape}")
     print(f"X_train: {X_train.shape}")
@@ -214,7 +213,6 @@ def restOfFirstPart(dframe):
     print(f"y_valid: {y_valid.shape}")
     print(f"y_test: {y_test.shape}")
 
-    # Print min and max values of columns
     print("*" * 100, "Before scaling/standardizing", "*" * 100)
     print("-" * 10, "Min", "-" * 10)
     print(X_train.min(numeric_only=True))
@@ -224,42 +222,26 @@ def restOfFirstPart(dframe):
     createHistogramsPartOne(X_train, "before")
     createPiechartsPartOne(X_train)
 
-    # Scale data
     scaler = MinMaxScaler()
-    # !!!!!
     X_train = scaler.fit_transform(X_train)
     X_valid = scaler.transform(X_valid)
     X_test = scaler.transform(X_test)
 
-    # Convert numpy arrays to pandas DataFrames
     X_train = pd.DataFrame(X_train, columns=X.columns)
     X_valid = pd.DataFrame(X_valid, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
-    # Print min and max values of columns
     print("*" * 100, "After scaling/standardizing", "*" * 100)
     print("-" * 10, "Min", "-" * 10)
     print(X_train.min(numeric_only=True))
     print("-" * 10, "Max", "-" * 10)
     print(X_train.max(numeric_only=True))
 
-    # Plot histograms after scaling (for interval attributes) (excludes explicit, genres)
-
     createHistogramsPartOne(X_train, "after")
 
-    # Train MLP model to predict emotion (1b)
-    # ------------------------------------------------------------------------------
-
+    # Train MLP model to predict emotion
     print("*" * 100, "MLP", "*" * 100)
     print(f"Random accuracy: {1 / len(y_train.unique())}")
-
-    # 10                0.8639  0.85069
-    # 100               0.8777  0.86545
-    # 500               0.8792  0.86631
-    # 150 150           0.8845  0.86197
-    # 150 100 100       0.9035  0.86805
-    # 1000 300 200      0.9045  0.86892
-    # 200 150 100       0.88978 0.87152
 
     clf = MLPClassifier(
         hidden_layer_sizes=(200, 150, 100),
@@ -268,20 +250,15 @@ def restOfFirstPart(dframe):
         early_stopping=True
     ).fit(X_train, y_train)
 
-    # Print Results and confusion matrix of results (1b)
-    # -------------------------------------------------------------------
-
-    # Predict on train set
+    # Print Results and confusion matrix of results
     y_pred = clf.predict(X_train)
     print('MLP accuracy on train set: ', accuracy_score(y_train, y_pred))
     cm_train = confusion_matrix(y_train, y_pred)
 
-    # Predict on test set
     y_pred = clf.predict(X_test)
     print('MLP accuracy on test set: ', accuracy_score(y_test, y_pred))
     cm_test = confusion_matrix(y_test, y_pred)
 
-    # Create class names for confusion matrix
     class_names = list(le.inverse_transform(clf.classes_))
 
     disp = ConfusionMatrixDisplay(confusion_matrix=cm_train, display_labels=class_names)
@@ -300,7 +277,9 @@ def restOfFirstPart(dframe):
 
 
 def createCorrelationHeatmaps(dframe, dframeGen):
-    # DFRAME1 ----------------------------------------------------------------------------------------------------------
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    # DFRAME1
     # ALL -> BASICS, TOP_GENRE, EMOTION (LE), EXPLICIT
     correlation_matrix = dframe.corr()
     plt.figure(figsize=(12, 11))
@@ -324,7 +303,7 @@ def createCorrelationHeatmaps(dframe, dframeGen):
     plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
     plt.show()
 
-    # DFRAME2 ----------------------------------------------------------------------------------------------------------
+    # DFRAME2
     # ALL -> BASICS, FILTERED_GENRE, EMOTION_LE, EXPLICIT
     dframeGenEdit = dframeGen.drop(['genres', 'filtered_genres', 'top_genre', 'emotion'], axis=1)
     correlation_matrix = dframeGenEdit.corr()
@@ -354,6 +333,8 @@ def createCorrelationHeatmaps(dframe, dframeGen):
 
 
 def createAnalysisEnergyLoudness(dframeGen):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     plt.figure(figsize=(10, 6))
     plt.scatter(dframeGen['energy'], dframeGen['loudness'], color='skyblue')
     plt.title('Scatter Plot')
@@ -379,6 +360,8 @@ def createAnalysisEnergyLoudness(dframeGen):
 
 
 def createAnalysisLivenessSpeechiness(dframeGen):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     plt.figure(figsize=(10, 6))
     plt.scatter(dframeGen['liveness'], dframeGen['speechiness'], color='skyblue')
     plt.title('Scatter Plot')
@@ -404,6 +387,8 @@ def createAnalysisLivenessSpeechiness(dframeGen):
 
 
 def createAnalysisTempoTopGenre(dframeGen):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     plt.figure(figsize=(10, 6))
     plt.scatter(dframeGen['tempo'], dframeGen['top_genre'], color='skyblue')
     plt.title('Scatter Plot')
@@ -422,24 +407,22 @@ def createAnalysisTempoTopGenre(dframeGen):
     plt.xticks(rotation=45)
     plt.show()
 
-    # Calculate means for each genre
     means = [dframeGen['tempo'][dframeGen['top_genre'] == genre].mean() for genre in dframeGen['top_genre'].unique()]
-    # Create a dictionary to store genres and their means
+
     genre_means = dict(zip(dframeGen['top_genre'].unique(), means))
-    # Sort genres based on mean values
+
     sorted_genres = sorted(dframeGen['top_genre'].unique(), key=lambda genre: genre_means[genre])
-    # Create a boxplot
+
     plt.figure(figsize=(15, 10))
     plt.title('Tempo Distribution by Genre')
     plt.xlabel('Genre')
     plt.ylabel('Tempo (BPM)')
-    # Create the boxplot using the sorted genres
+
     plt.boxplot([dframeGen['tempo'][dframeGen['top_genre'] == genre] for genre in sorted_genres],
                 labels=sorted_genres)
-    # Add means as red dots
+
     sorted_means = [genre_means[genre] for genre in sorted_genres]
     plt.plot(range(1, len(sorted_genres) + 1), sorted_means, 'rx')
-    # Show the plot
     plt.xticks(rotation=45)
     plt.show()
 
@@ -447,12 +430,16 @@ def createAnalysisTempoTopGenre(dframeGen):
 
 
 def generate_three_pie_charts(ax, labels, ratios, title):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     ax.pie(ratios, labels=labels, autopct='%1.1f%%', startangle=90)
     ax.axis('equal')
     ax.set_title(title)
 
 
 def createAnalysisTopGenreFilteredGenres(dframeGen):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     dframeGenEdit = dframeGen[['forro', 'sertanejo', 'j-pop', 'anime', 'funk', 'soul']]
     correlation_matrix = dframeGenEdit.corr()
     plt.figure(figsize=(12, 11))
@@ -462,60 +449,62 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
     plt.xticks(range(len(correlation_matrix.columns)), correlation_matrix.columns, rotation=90)
     plt.yticks(range(len(correlation_matrix.columns)), correlation_matrix.columns)
     plt.show()
-    # Filter rows where only EDM is True
+
     funk_only = dframeGen[(dframeGen['funk'] == True) & (dframeGen['soul'] == False)]
-    # Filter rows where only soul is True
+
     soul_only = dframeGen[(dframeGen['funk'] == False) & (dframeGen['soul'] == True)]
-    # Filter rows where both funk and soul are True
+
     funk_and_soul = dframeGen[(dframeGen['funk'] == True) & (dframeGen['soul'] == True)]
-    # Calculate ratios
+
     funk_only_ratio = len(funk_only) / len(dframeGen)
     soul_only_ratio = len(soul_only) / len(dframeGen)
     funk_and_soul_ratio = len(funk_and_soul) / len(dframeGen)
-    # Filter rows where only forro is True
+
     forro_only = dframeGen[(dframeGen['forro'] == True) & (dframeGen['sertanejo'] == False)]
-    # Filter rows where only sertanejo is True
+
     sertanejo_only = dframeGen[(dframeGen['forro'] == False) & (dframeGen['sertanejo'] == True)]
-    # Filter rows where both forro and sertanejo are True
+
     forro_and_sertanejo = dframeGen[(dframeGen['forro'] == True) & (dframeGen['sertanejo'] == True)]
-    # Calculate ratios
+
     forro_only_ratio = len(forro_only) / len(dframeGen)
     sertanejo_only_ratio = len(sertanejo_only) / len(dframeGen)
     forro_and_sertanejo_ratio = len(forro_and_sertanejo) / len(dframeGen)
-    # Filter rows where only j-pop is True
+
     jpop_only = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen['anime'] == False)]
-    # Filter rows where only anime is True
+
     anime_only = dframeGen[(dframeGen['j-pop'] == False) & (dframeGen['anime'] == True)]
-    # Filter rows where both jpop and anime are True
+
     jpop_and_anime = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen['anime'] == True)]
-    # Calculate ratios
+
     jpop_only_ratio = len(jpop_only) / len(dframeGen)
     anime_only_ratio = len(anime_only) / len(dframeGen)
     jpop_and_anime_ratio = len(jpop_and_anime) / len(dframeGen)
-    # Create a figure with 1 row and 3 columns
+
     fig, axes = plt.subplots(1, 3, figsize=(18, 7))
-    # Data for funk and soul
+
     labels1 = ['Funk without Soul', 'Soul without Funk', 'Funk and Soul']
     ratios1 = [funk_only_ratio, soul_only_ratio, funk_and_soul_ratio]
-    # Data for Forro and Sertanejo
+
     labels2 = ['Forro without Sertanejo', 'Sertanejo without Forro', 'Forro and Sertanejo']
     ratios2 = [forro_only_ratio, sertanejo_only_ratio, forro_and_sertanejo_ratio]
-    # Data for J-Pop and Anime
+
     labels3 = ['J-pop without Anime', 'Anime without J-pop', 'J-pop and Anime']
     ratios3 = [jpop_only_ratio, anime_only_ratio, jpop_and_anime_ratio]
-    # Generate pie charts
+
     generate_three_pie_charts(axes[0], labels1, ratios1, 'Distribution of Funk and Soul')
     generate_three_pie_charts(axes[1], labels2, ratios2, 'Distribution of Forro and Sertanejo')
     generate_three_pie_charts(axes[2], labels3, ratios3, 'Distribution of J-Pop and Anime')
-    # Adjust layout
+
     plt.tight_layout()
-    # Show the combined plot
+
     plt.show()
 
     return None
 
 
 def createAnalysisComedySpeechiness(dframeGen):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
     plt.scatter(dframeGen['comedy'], dframeGen['speechiness'])
     plt.title("Correlation between Comedy and Speechiness")
     plt.xlabel("Comedy")
@@ -524,13 +513,11 @@ def createAnalysisComedySpeechiness(dframeGen):
 
     num_intervals = 20
     plt.figure(figsize=(12, 11))
-    # Create intervals for speechiness
+
     dframeGen['speechiness_interval'] = pd.cut(dframeGen['speechiness'], num_intervals)
 
-    # Calculate the proportion of comedy entries in each interval
     grouped_data = dframeGen.groupby('speechiness_interval')['comedy'].mean()
 
-    # Plot a bar chart
     plt.bar(range(len(grouped_data)), grouped_data, tick_label=grouped_data.index)
 
     plt.xlabel('Speechiness Intervals')
@@ -552,26 +539,24 @@ def secondPart(dframe, dframeGen):
 
 
 def thirdPartOvertrain(dframe, mode='overtrain'):
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
+
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
     y = dframe[['happy', 'sad', 'calm', 'energetic']]
 
-    # Split dataset into train, valid and test
     X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
     X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
                                                         random_state=42)
 
-    # Scale the data
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(X_train)
     X_valid = scaler.transform(X_valid)
     X_test = scaler.transform(X_test)
 
-    # Convert numpy arrays to pandas DataFrames
     X_train = pd.DataFrame(X_train, columns=X.columns)
     X_valid = pd.DataFrame(X_valid, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
-    # Train MLP model in Keras
     if mode == 'early_stop':
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     model = Sequential()
@@ -590,6 +575,153 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
                             callbacks=[early_stopping])
     else:
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30)
+
+    test_scores = model.evaluate(X_test, y_test, verbose=0)
+    train_scores = model.evaluate(X_train, y_train, verbose=0)
+
+    print("*" * 100, "Test and Train accuracy", "*" * 20)
+    print(f"Test accuracy: {test_scores[1]:.4f}")
+    print(f"Train accuracy: {train_scores[1]:.4f}")
+
+    y_pred_test = model.predict(X_test)
+    y_pred_test = np.argmax(y_pred_test, axis=1)
+
+    y_pred_train = model.predict(X_train)
+    y_pred_train = np.argmax(y_pred_train, axis=1)
+
+    class_names = dframe[['happy', 'sad', 'calm', 'energetic']].columns.tolist()
+
+    cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred_test)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on train set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    plt.plot(history.history['loss'], label='train_loss')
+    plt.plot(history.history['val_loss'], label='val_loss')
+    plt.title('Loss/Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
+    plt.plot(history.history['accuracy'], label='train_accuracy')
+    plt.plot(history.history['val_accuracy'], label='val_accuracy')
+    plt.title('Accuracy/Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.show()
+    return None
+
+
+def thirdPartLast(dframe, mode):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
+    y = dframe[['happy', 'sad', 'calm', 'energetic']]
+
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=42)
+
+    scaler = MinMaxScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    if mode == 'prvy':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'druhy':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'treti':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'stvrty':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(25, activation='relu'))
+        model.add(Dense(25, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0005), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'piaty':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(100, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.00005, momentum=0.9),
+                      metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+    if mode == 'siesty':
+        # Train MLP model in Keras
+        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+        model = Sequential()
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+        model.add(Dense(25, activation='relu'))
+        model.add(Dense(25, activation='relu'))
+        model.add(Dense(4, activation='softmax'))
+
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.000005), metrics=['accuracy'])
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                            callbacks=[early_stopping])
+
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
     train_scores = model.evaluate(X_train, y_train, verbose=0)
@@ -600,10 +732,10 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
 
     # Plot confusion matrix
     y_pred_test = model.predict(X_test)
-    y_pred_test = np.argmax(y_pred_test, axis=1)  # Convert probabilities to class labels
+    y_pred_test = np.argmax(y_pred_test, axis=1)
 
     y_pred_train = model.predict(X_train)
-    y_pred_train = np.argmax(y_pred_train, axis=1)  # Convert probabilities to class labels
+    y_pred_train = np.argmax(y_pred_train, axis=1)
 
     class_names = dframe[['happy', 'sad', 'calm', 'energetic']].columns.tolist()
 
@@ -639,124 +771,50 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
     plt.ylabel('Accuracy')
     plt.legend()
     plt.show()
+
     return None
 
 
-def thirdPartLast(dframe, mode):
-    X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
-    y = dframe[['happy', 'sad', 'calm', 'energetic']]
+def bonusThird(dframe):
+    # Tato funkcia bola generovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
-    # Split dataset into train, valid and test
-    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=42)
+    X = dframe.drop(columns=['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                             'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                             'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                             'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul'])
+    y = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
+
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=20)
     X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
-                                                        random_state=42)
+                                                        random_state=20)
+    smote = SMOTE(random_state=20)
 
-    # Scale the data
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(X_train)
     X_valid = scaler.transform(X_valid)
     X_test = scaler.transform(X_test)
 
-    # Convert numpy arrays to pandas DataFrames
     X_train = pd.DataFrame(X_train, columns=X.columns)
     X_valid = pd.DataFrame(X_valid, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
-    #Original
-    # 7 layers (45, 100, 100, 100, 100, 100, 4)
-    # ADAM (0.0002)
-    # Early stopping patience (5)
-    # Epochs 200
+    X_resampled, y_resampled = smote.fit_resample(X_train, y_train.values)
 
+    # Train MLP model in Keras
+    early_stopping = EarlyStopping(monitor='val_loss', patience=50, restore_best_weights=True)
+    model = Sequential()
+    model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
+    model.add(Dense(150, activation='relu'))
+    model.add(Dense(150, activation='relu'))
+    model.add(Dense(32, activation='softmax'))
 
-    if mode == 'prvy':
-        # 4 hidden layers (45, 100, 100, 100)
-        # ADAM (0.0002)
-        # Early stopping patience (5)
-        # Epochs 200
-
-        # Train MLP model in Keras
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-        model = Sequential()
-        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(4, activation='softmax'))
-
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
-                            callbacks=[early_stopping])
-    if mode == 'druhy':
-        # 4 hidden layers (45, 100, 100, 100)
-        # ADAM (0.0002)
-        # Early stopping patience (15)
-        # Epochs 200
-
-        # Train MLP model in Keras
-        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
-        model = Sequential()
-        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(4, activation='softmax'))
-
-        model.compile(loss='categorical_crossentropy',  optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
-                            callbacks=[early_stopping])
-    if mode == 'treti':
-        # 4 hidden layers (45, 100, 100, 100)
-        # ADAM (0.00005)
-        # Early stopping patience (15)
-        # Epochs 200
-
-        # Train MLP model in Keras
-        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
-        model = Sequential()
-        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(4, activation='softmax'))
-
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00005), metrics=['accuracy'])
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
-                            callbacks=[early_stopping])
-    if mode == 'stvrty':
-        # 4 hidden layers (45, 100, 100, 100)
-        # SGD (0.00005)
-        # Early stopping patience (15)
-        # Epochs 200
-
-        # Train MLP model in Keras
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-        model = Sequential()
-        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(100, activation='relu'))
-        model.add(Dense(4, activation='softmax'))
-
-        model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.00005, momentum=0.9), metrics=['accuracy'])
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
-                            callbacks=[early_stopping])
-    if mode == 'piaty':
-        # 4 hidden layers (45, 25, 25)
-        # ADAM (0.00005)
-        # Early stopping patience (15)
-        # Epochs 200
-        # Train MLP model in Keras
-        early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
-        model = Sequential()
-        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
-        model.add(Dense(25, activation='relu'))
-        model.add(Dense(25, activation='relu'))
-        model.add(Dense(4, activation='softmax'))
-
-        model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0002), metrics=['accuracy'])
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
-                            callbacks=[early_stopping])
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001),
+                  metrics=['accuracy'])
+    history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
+                        callbacks=[early_stopping])
 
     # Evaluate the model
     test_scores = model.evaluate(X_test, y_test, verbose=0)
@@ -768,12 +826,15 @@ def thirdPartLast(dframe, mode):
 
     # Plot confusion matrix
     y_pred_test = model.predict(X_test)
-    y_pred_test = np.argmax(y_pred_test, axis=1)  # Convert probabilities to class labels
+    y_pred_test = np.argmax(y_pred_test, axis=1)
 
     y_pred_train = model.predict(X_train)
-    y_pred_train = np.argmax(y_pred_train, axis=1)  # Convert probabilities to class labels
+    y_pred_train = np.argmax(y_pred_train, axis=1)
 
-    class_names = dframe[['happy', 'sad', 'calm', 'energetic']].columns.tolist()
+    class_names = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                          'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                          'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                          'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].columns.tolist()
 
     cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred_test)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
@@ -781,6 +842,7 @@ def thirdPartLast(dframe, mode):
     disp.plot(ax=ax)
     disp.ax_.set_title("Confusion matrix on test set")
     disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.xticks(rotation=45)
     plt.show()
 
     cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
@@ -789,6 +851,7 @@ def thirdPartLast(dframe, mode):
     disp.plot(ax=ax)
     disp.ax_.set_title("Confusion matrix on train set")
     disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.xticks(rotation=45)
     plt.show()
 
     # Plot loss and accuracy
@@ -813,19 +876,16 @@ def thirdPartLast(dframe, mode):
 
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
-dfThird = handleOutliersAndMissingValues(dfThird)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
+dfThird = handleOutliersAndMissingValues(dfThird)
 df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
 # restOfFirstPart(df)
-#thirdPartOvertrain(dfThird)
-thirdPartOvertrain(dfThird, 'early_stop')
+# secondPart(df, dfGen)
+# thirdPartOvertrain(dfThird)
+# thirdPartOvertrain(dfThird, 'early_stop')
 # thirdPartLast(dfThird, 'prvy')
-# thirdPartLast(dfThird, 'druhy')
-# thirdPartLast(dfThird, 'treti')
-#thirdPartLast(dfThird, 'stvrty')
-thirdPartLast(dfThird, 'piaty')
-# df.to_csv('./data/zadanie1_top_genre.csv', index=False)
-# dfGen.to_csv('./data/zadanie1_all_genres.csv', index=False)
-# dfThird.to_csv('./data/zadanie1_all_genres_all_emotions.csv', index=False)
+bonusThird(dfThird)
+# export to csv
+# dfThird.to_csv('data/encoded_data.csv', index=False)
