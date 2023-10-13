@@ -14,6 +14,7 @@ import tensorflow as tf
 import keras
 from keras import layers, Sequential
 from imblearn.over_sampling import SMOTE
+from sklearn.utils import compute_class_weight
 
 # ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
 # ======================================================================================================================
@@ -777,7 +778,7 @@ def thirdPartLast(dframe, mode):
     return None
 
 
-def bonusThird(dframe):
+def bonusThird(dframe, mode=0):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
     # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
@@ -793,7 +794,7 @@ def bonusThird(dframe):
     X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=20)
     X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
                                                         random_state=20)
-    smote = SMOTE(random_state=20)
+    smote = SMOTE(random_state=44)
 
     scaler = MinMaxScaler()
     X_train = scaler.fit_transform(X_train)
@@ -806,23 +807,40 @@ def bonusThird(dframe):
 
     X_resampled, y_resampled = smote.fit_resample(X_train.values, y_train.values)
     X_resampled = pd.DataFrame(X_resampled, columns=X.columns)
+    y_resampled = pd.DataFrame(y_resampled, columns=y.columns)
 
     # Train MLP model in Keras
-    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
     model = Sequential()
-    model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
-    model.add(Dense(150, activation='relu'))
-    model.add(Dense(150, activation='relu'))
+    if mode == 1:
+        model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
+    else:
+        model.add(Dense(50, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+
     model.add(Dense(32, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0001),
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00004),
                   metrics=['accuracy'])
-    history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=100, batch_size=30,
-                        callbacks=[early_stopping])
+    if mode == 1:
+        history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=600,
+                            batch_size=60,
+                            callbacks=[early_stopping])
+    else:
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=600, batch_size=60,
+                            callbacks=[early_stopping])
 
     # Evaluate the model
-    test_scores = model.evaluate(X_test, y_test, verbose=0)
-    train_scores = model.evaluate(X_resampled, y_resampled, verbose=0)
+    if mode == 1:
+        test_scores = model.evaluate(X_test, y_test, verbose=0)
+        train_scores = model.evaluate(X_resampled, y_resampled, verbose=0)
+    else:
+        test_scores = model.evaluate(X_test, y_test, verbose=0)
+        train_scores = model.evaluate(X_train, y_train, verbose=0)
 
     print("*" * 100, "Test and Train accuracy", "*" * 20)
     print(f"Test accuracy: {test_scores[1]:.4f}")
@@ -832,8 +850,12 @@ def bonusThird(dframe):
     y_pred_test = model.predict(X_test)
     y_pred_test = np.argmax(y_pred_test, axis=1)
 
-    y_pred_train = model.predict(X_resampled)
-    y_pred_train = np.argmax(y_pred_train, axis=1)
+    if mode == 1:
+        y_pred_train = model.predict(X_resampled)
+        y_pred_train = np.argmax(y_pred_train, axis=1)
+    else:
+        y_pred_train = model.predict(X_train)
+        y_pred_train = np.argmax(y_pred_train, axis=1)
 
     class_names = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
@@ -846,16 +868,19 @@ def bonusThird(dframe):
     disp.plot(ax=ax)
     disp.ax_.set_title("Confusion matrix on test set")
     disp.ax_.set(xlabel='Predicted', ylabel='True')
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=90)
     plt.show()
 
-    cm = confusion_matrix(np.argmax(y_resampled.values, axis=1), y_pred_train)
+    if mode == 1:
+        cm = confusion_matrix(np.argmax(y_resampled.values, axis=1), y_pred_train)
+    else:
+        cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     fig, ax = plt.subplots(figsize=(10, 10))
     disp.plot(ax=ax)
     disp.ax_.set_title("Confusion matrix on train set")
     disp.ax_.set(xlabel='Predicted', ylabel='True')
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=90)
     plt.show()
 
     # Plot loss and accuracy
@@ -878,6 +903,26 @@ def bonusThird(dframe):
     return None
 
 
+def reduceDataframe(dframe):
+    # Convert the columns to boolean values
+    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
+
+    # Apply the logical OR operation
+    filtered_df = dframe[bool_columns.any(axis=1)]
+
+    # Group by the result columns and sample 200 rows from each group
+    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
+        lambda x: x.sample(min(len(x), 200)))
+
+    # Reset index
+    sampled_df = sampled_df.reset_index(drop=True)
+
+    return sampled_df
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
@@ -890,6 +935,7 @@ dfThird = encodeGenres(dfThird, 2)
 # thirdPartOvertrain(dfThird)
 # thirdPartOvertrain(dfThird, 'early_stop')
 # thirdPartLast(dfThird, 'prvy')
-bonusThird(dfThird)
-# export to csv
-# dfThird.to_csv('data/encoded_data.csv', index=False)
+#bonusThird(dfThird)
+#bonusThird(dfThird, 1)
+reducedDataframe = reduceDataframe(dfThird)
+bonusThird(reducedDataframe)
