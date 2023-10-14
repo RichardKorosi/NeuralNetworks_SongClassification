@@ -26,7 +26,7 @@ from imblearn.over_sampling import SMOTE
 # ======================================================================================================================
 # Grafy, Pomocne funkcie, SMOTE...:
 #  Autor: Github Copilot, ChatGPT
-#  Grafy boli generovane za pomoci ChatGPT a GithubCopilota
+#  Grafy, pomocne funkcie  boli vypracoavane za pomoci ChatGPT a GithubCopilota
 # ======================================================================================================================
 
 # Uvod -----------------------------------------------------------------------------------------------------------------
@@ -441,6 +441,15 @@ def generate_three_pie_charts(ax, labels, ratios, title):
     ax.set_title(title)
 
 
+def generate_pie_chart_genres(ax, labels, ratios, title):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    ax.pie(ratios, labels=None, autopct='%1.1f%%', startangle=90, colors=plt.cm.Paired(range(len(labels))))
+    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    ax.set_title(title)
+    ax.legend(labels, loc='lower left')  # Move legend to bottom-right
+
+
 def createAnalysisTopGenreFilteredGenres(dframeGen):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
@@ -472,17 +481,17 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
                                                                'j-idol', 'opera', 'comedy', 'tango', 'techno',
                                                                'gospel']] == 0).all(axis=1)]
 
-    soul_alone = dframeGen[(dframeGen['soul'] == True) & (dframeGen[
-                                                              ['edm', 'house', 'country', 'pop', 'rock', 'funk', 'folk',
-                                                               'metal', 'grunge', 'metalcore', 'punk',
-                                                               'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
-                                                               'forro', 'sertanejo', 'industrial', 'hardstyle',
-                                                               'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
-                                                               'ambient', 'classical', 'disco', 'rockabilly',
-                                                               'sleep', 'j-pop', 'anime', 'afrobeat', 'electro',
-                                                               'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
-                                                               'j-idol', 'opera', 'comedy', 'tango', 'techno',
-                                                               'gospel']] == 0).all(axis=1)]
+    soul_alone = dframeGen[
+        (dframeGen['soul'] == True) & (dframeGen[['edm', 'house', 'country', 'pop', 'rock', 'funk', 'folk',
+                                                  'metal', 'grunge', 'metalcore', 'punk',
+                                                  'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
+                                                  'forro', 'sertanejo', 'industrial', 'hardstyle',
+                                                  'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
+                                                  'ambient', 'classical', 'disco', 'rockabilly',
+                                                  'sleep', 'j-pop', 'anime', 'afrobeat', 'electro',
+                                                  'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
+                                                  'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                  'gospel']] == 0).all(axis=1)]
 
     funk_alone_ratio = len(funk_alone) / len(dframeGen)
     funk_only_ratio = len(funk_only) / len(dframeGen) - funk_alone_ratio
@@ -496,8 +505,38 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
 
     forro_and_sertanejo = dframeGen[(dframeGen['forro'] == True) & (dframeGen['sertanejo'] == True)]
 
-    forro_only_ratio = len(forro_only) / len(dframeGen)
-    sertanejo_only_ratio = len(sertanejo_only) / len(dframeGen)
+    forro_alone = dframeGen[(dframeGen['forro'] == True) & (dframeGen[
+                                                                ['edm', 'house', 'country', 'pop', 'rock', 'soul',
+                                                                 'folk',
+                                                                 'metal', 'grunge', 'metalcore', 'punk',
+                                                                 'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
+                                                                 'funk', 'sertanejo', 'industrial', 'hardstyle',
+                                                                 'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
+                                                                 'ambient', 'classical', 'disco', 'rockabilly',
+                                                                 'sleep', 'j-pop', 'anime', 'afrobeat', 'electro',
+                                                                 'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
+                                                                 'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                                 'gospel']] == 0).all(axis=1)]
+    sertanejo_alone = dframeGen[(dframeGen['sertanejo'] == True) & (dframeGen[
+                                                                        ['edm', 'house', 'country', 'pop', 'rock',
+                                                                         'soul', 'folk',
+                                                                         'metal', 'grunge', 'metalcore', 'punk',
+                                                                         'emo', 'bluegrass', 'ska', 'reggaeton',
+                                                                         'reggae',
+                                                                         'funk', 'forro', 'industrial', 'hardstyle',
+                                                                         'trance', 'dancehall', 'jazz', 'dubstep',
+                                                                         'blues',
+                                                                         'ambient', 'classical', 'disco', 'rockabilly',
+                                                                         'sleep', 'j-pop', 'anime', 'afrobeat',
+                                                                         'electro',
+                                                                         'k-pop', 'samba', 'j-rock', 'hardcore',
+                                                                         'grindcore',
+                                                                         'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                                         'gospel']] == 0).all(axis=1)]
+    forro_alone_ratio = len(forro_alone) / len(dframeGen)
+    forro_only_ratio = len(forro_only) / len(dframeGen) - forro_alone_ratio
+    sertanejo_alone_ratio = len(sertanejo_alone) / len(dframeGen)
+    sertanejo_only_ratio = len(sertanejo_only) / len(dframeGen) - sertanejo_alone_ratio
     forro_and_sertanejo_ratio = len(forro_and_sertanejo) / len(dframeGen)
 
     jpop_only = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen['anime'] == False)]
@@ -506,24 +545,51 @@ def createAnalysisTopGenreFilteredGenres(dframeGen):
 
     jpop_and_anime = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen['anime'] == True)]
 
-    jpop_only_ratio = len(jpop_only) / len(dframeGen)
-    anime_only_ratio = len(anime_only) / len(dframeGen)
+    jpop_alone = dframeGen[(dframeGen['j-pop'] == True) & (dframeGen[
+                                                               ['edm', 'house', 'country', 'pop', 'rock', 'soul',
+                                                                'folk',
+                                                                'metal', 'grunge', 'metalcore', 'punk',
+                                                                'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
+                                                                'funk', 'sertanejo', 'industrial', 'hardstyle',
+                                                                'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
+                                                                'ambient', 'classical', 'disco', 'rockabilly',
+                                                                'sleep', 'anime', 'afrobeat', 'electro',
+                                                                'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
+                                                                'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                                'gospel']] == 0).all(axis=1)]
+    anime_alone = dframeGen[(dframeGen['anime'] == True) & (dframeGen[
+                                                                ['edm', 'house', 'country', 'pop', 'rock', 'soul',
+                                                                 'folk',
+                                                                 'metal', 'grunge', 'metalcore', 'punk',
+                                                                 'emo', 'bluegrass', 'ska', 'reggaeton', 'reggae',
+                                                                 'funk', 'sertanejo', 'industrial', 'hardstyle',
+                                                                 'trance', 'dancehall', 'jazz', 'dubstep', 'blues',
+                                                                 'ambient', 'classical', 'disco', 'rockabilly',
+                                                                 'sleep', 'j-pop', 'afrobeat', 'electro',
+                                                                 'k-pop', 'samba', 'j-rock', 'hardcore', 'grindcore',
+                                                                 'j-idol', 'opera', 'comedy', 'tango', 'techno',
+                                                                 'gospel']] == 0).all(axis=1)]
+    jpop_alone_ratio = len(jpop_alone) / len(dframeGen)
+    jpop_only_ratio = len(jpop_only) / len(dframeGen) - jpop_alone_ratio
+    anime_alone_ratio = len(anime_alone) / len(dframeGen)
+    anime_only_ratio = len(anime_only) / len(dframeGen) - anime_alone_ratio
     jpop_and_anime_ratio = len(jpop_and_anime) / len(dframeGen)
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 7))
 
-    labels1 = ['Soul alone', 'Soul with others', 'Funk alone', 'Funk with others', 'Funk and Soul' ]
-    ratios1 = [soul_alone_ratio, soul_only_ratio, funk_alone_ratio, funk_only_ratio, funk_and_soul_ratio,  ]
+    labels1 = ['Soul alone', 'Soul with others', 'Funk alone', 'Funk with others', 'Funk and Soul']
+    ratios1 = [soul_alone_ratio, soul_only_ratio, funk_alone_ratio, funk_only_ratio, funk_and_soul_ratio]
 
-    labels2 = ['Forro without Sertanejo', 'Sertanejo without Forro', 'Forro and Sertanejo']
-    ratios2 = [forro_only_ratio, sertanejo_only_ratio, forro_and_sertanejo_ratio]
+    labels2 = ['Forro alone', 'Forro with others', 'Sertanejo alone', 'Sertanejo with others', 'Forro and Sertanejo']
+    ratios2 = [forro_alone_ratio, forro_only_ratio, sertanejo_alone_ratio, sertanejo_only_ratio,
+               forro_and_sertanejo_ratio]
 
-    labels3 = ['J-pop without Anime', 'Anime without J-pop', 'J-pop and Anime']
-    ratios3 = [jpop_only_ratio, anime_only_ratio, jpop_and_anime_ratio]
+    labels3 = ['J-Pop alone', 'J-Pop with others', 'Anime alone', 'Anime with others', 'J-Pop and Anime']
+    ratios3 = [jpop_alone_ratio, jpop_only_ratio, anime_alone_ratio, anime_only_ratio, jpop_and_anime_ratio]
 
-    generate_three_pie_charts(axes[0], labels1, ratios1, 'Distribution of Funk and Soul')
-    generate_three_pie_charts(axes[1], labels2, ratios2, 'Distribution of Forro and Sertanejo')
-    generate_three_pie_charts(axes[2], labels3, ratios3, 'Distribution of J-Pop and Anime')
+    generate_pie_chart_genres(axes[0], labels1, ratios1, 'Distribution of Funk and Soul')
+    generate_pie_chart_genres(axes[1], labels2, ratios2, 'Distribution of Forro and Sertanejo')
+    generate_pie_chart_genres(axes[2], labels3, ratios3, 'Distribution of J-Pop and Anime')
 
     plt.tight_layout()
 
@@ -559,12 +625,12 @@ def createAnalysisComedySpeechiness(dframeGen):
 
 
 def secondPart(dframe, dframeGen):
-    # createCorrelationHeatmaps(dframe, dframeGen)
-    # createAnalysisEnergyLoudness(dframeGen)
-    # createAnalysisLivenessSpeechiness(dframeGen)
-    # createAnalysisTempoTopGenre(dframeGen)
+    createCorrelationHeatmaps(dframe, dframeGen)
+    createAnalysisEnergyLoudness(dframeGen)
+    createAnalysisLivenessSpeechiness(dframeGen)
+    createAnalysisTempoTopGenre(dframeGen)
     createAnalysisTopGenreFilteredGenres(dframeGen)
-    # createAnalysisComedySpeechiness(dframeGen)
+    createAnalysisComedySpeechiness(dframeGen)
     return None
 
 
@@ -656,6 +722,7 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
 
 
 def thirdPartLast(dframe, mode):
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
@@ -971,15 +1038,16 @@ def gridSearch(dframe):
     # Define parameter grid for grid search
     param_grid = {
         'hidden_layer_sizes': [
-            (100,), (200,), (300,),  # Single hidden layer
-            (100, 100), (200, 200), (300, 300),  # Two hidden layers
-            (100, 100, 100), (200, 200, 200)
+            (2,), (10,), (100,),  # Single hidden layer
+            (10, 10), (100, 100),  # Two hidden layers
+            (10, 10, 10), (100, 100, 100),  # Three hidden layers
         ],
-        'max_iter': [100, 150],  # Different max iterations
+        'max_iter': [50, 100, 200],  # Different max iterations
+        'early_stopping': [True, False]
     }
 
     # Initialize the classifier
-    clf = MLPClassifier(random_state=1, early_stopping=True)
+    clf = MLPClassifier(random_state=1)
 
     # Create GridSearchCV object
     grid_search = GridSearchCV(clf, param_grid, cv=3, n_jobs=-1)
@@ -990,16 +1058,26 @@ def gridSearch(dframe):
     # Get the best parameters and estimator from grid search
     best_params = grid_search.best_params_
     best_clf = grid_search.best_estimator_
-    best_estimator = grid_search.best_estimator_
-    x = grid_search.param_grid
+    results_df = pd.DataFrame(grid_search.cv_results_)
+    worst_params = results_df.sort_values(by='mean_test_score', ascending=True).iloc[0]['params']
 
-    # Train with best parameters
+    worst_clf = MLPClassifier(random_state=1, early_stopping=worst_params['early_stopping'],
+                              hidden_layer_sizes=worst_params['hidden_layer_sizes'][0],
+                              max_iter=worst_params['max_iter'])
+
+    # Train with best and worst parameters
     best_clf.fit(X_train, y_train)
+    worst_clf.fit(X_train, y_train)
+
+    # Evaluate the performance on the validation set
+    worst_score = worst_clf.score(X_valid, y_valid)
 
     # Print the best parameters
     print("Best Parameters:", best_params)
-    print("Best Parameters:", best_estimator)
-    print("Param grid:", x)
+    print("Best score:", grid_search.best_score_)
+    print("Worst Parameters:", worst_params)
+    print("Worst score:", worst_score)
+
     # Print Results and confusion matrix of results for train set
     y_pred_train = best_clf.predict(X_train)
     print('MLP accuracy on train set: ', accuracy_score(y_train, y_pred_train))
@@ -1026,23 +1104,49 @@ def gridSearch(dframe):
     disp.ax_.set(xlabel='Predicted', ylabel='True')
     plt.show()
 
+    # Print Results and confusion matrix of results for train set
+    y_pred_train = worst_clf.predict(X_train)
+    print('MLP accuracy on train set: ', accuracy_score(y_train, y_pred_train))
+    cm_train = confusion_matrix(y_train, y_pred_train)
+
+    # Print Results and confusion matrix of results for test set
+    y_pred_test = worst_clf.predict(X_test)
+    print('MLP accuracy on test set: ', accuracy_score(y_test, y_pred_test))
+    cm_test = confusion_matrix(y_test, y_pred_test)
+
+    class_names = list(le.inverse_transform(worst_clf.classes_))
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm_train, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on train set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm_test, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.show()
+
     return None
 
 
-# ----------------------------------------------------------------------------------------------------------------------
+# Results---------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
 dfThird = handleOutliersAndMissingValues(dfThird)
 df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
-# restOfFirstPart(df)
-# gridSearch(df)
+restOfFirstPart(df)
+gridSearch(df)
 secondPart(df, dfGen)
-# thirdPartOvertrain(dfThird)
-# thirdPartOvertrain(dfThird, 'early_stop')
-# thirdPartLast(dfThird, 'prvy')
-# bonusThird(dfThird)
-# bonusThird(dfThird, 1)
-# reducedDataframe = reduceDataframe(dfThird)
-# bonusThird(reducedDataframe)
+thirdPartOvertrain(dfThird)
+thirdPartOvertrain(dfThird, 'early_stop')
+thirdPartLast(dfThird, 'prvy')
+bonusThird(dfThird)
+bonusThird(dfThird, 1)
+reducedDataframe = reduceDataframe(dfThird)
+bonusThird(reducedDataframe)
