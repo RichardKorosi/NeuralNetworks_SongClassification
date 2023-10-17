@@ -613,12 +613,12 @@ def createAnalysisComedySpeechiness(dframeGen):
 
 
 def secondPart(dframe, dframeGen):
-    # createCorrelationHeatmaps(dframe, dframeGen)
-    # createAnalysisEnergyLoudness(dframeGen)
-    # createAnalysisLivenessSpeechiness(dframeGen)
+    createCorrelationHeatmaps(dframe, dframeGen)
+    createAnalysisEnergyLoudness(dframeGen)
+    createAnalysisLivenessSpeechiness(dframeGen)
     createAnalysisDanceabilityTopGenre(dframeGen)
-    # createAnalysisTopGenreFilteredGenres(dframeGen)
-    # createAnalysisComedySpeechiness(dframeGen)
+    createAnalysisTopGenreFilteredGenres(dframeGen)
+    createAnalysisComedySpeechiness(dframeGen)
     return None
 
 
