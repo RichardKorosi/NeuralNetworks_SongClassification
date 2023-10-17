@@ -15,7 +15,7 @@ import tensorflow as tf
 import keras
 import seaborn as sns
 from keras import layers, Sequential
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 
 # ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
 # ======================================================================================================================
@@ -95,6 +95,8 @@ def encodeGenres(dframe, mode=0):
     # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
 
     if mode == 0:
+        # First Part
+
         # Column types and encoding
         print("*" * 100, "Column types", "*" * 100)
         print(dframe.dtypes)
@@ -117,6 +119,8 @@ def encodeGenres(dframe, mode=0):
 
         return dframe, le
     elif mode == 1:
+        # Second part (EDA)
+
         le = LabelEncoder()
         dframe['emotion_le'] = le.fit_transform(df['emotion'])
 
@@ -134,6 +138,7 @@ def encodeGenres(dframe, mode=0):
 
         return dframe
     else:
+        # KERAS
         dframe = pd.get_dummies(dframe, columns=['top_genre'], prefix='', prefix_sep='')
         dframe = pd.get_dummies(dframe, columns=['emotion'], prefix='', prefix_sep='')
 
@@ -399,7 +404,8 @@ def createAnalysisDanceabilityTopGenre(dframeGen):
     plt.ylabel('top_genre')
     plt.show()
 
-    means = [dframeGen['danceability'][dframeGen['top_genre'] == genre].mean() for genre in dframeGen['top_genre'].unique()]
+    means = [dframeGen['danceability'][dframeGen['top_genre'] == genre].mean() for genre in
+             dframeGen['top_genre'].unique()]
 
     genre_means = dict(zip(dframeGen['top_genre'].unique(), means))
 
@@ -859,150 +865,6 @@ def thirdPartLast(dframe, mode):
 
     return None
 
-
-def bonusThird(dframe, mode=0):
-    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-    # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-
-    X = dframe.drop(columns=['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                             'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
-                             'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
-                             'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul'])
-    y = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
-                'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
-                'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
-
-    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=20)
-    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
-                                                        random_state=20)
-    smote = SMOTE(random_state=44)
-
-    scaler = MinMaxScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_valid = scaler.transform(X_valid)
-    X_test = scaler.transform(X_test)
-
-    X_train = pd.DataFrame(X_train, columns=X.columns)
-    X_valid = pd.DataFrame(X_valid, columns=X.columns)
-    X_test = pd.DataFrame(X_test, columns=X.columns)
-
-    X_resampled, y_resampled = smote.fit_resample(X_train.values, y_train.values)
-    X_resampled = pd.DataFrame(X_resampled, columns=X.columns)
-    y_resampled = pd.DataFrame(y_resampled, columns=y.columns)
-
-    # Train MLP model in Keras
-    early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
-    model = Sequential()
-    if mode == 1:
-        model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
-    else:
-        model.add(Dense(50, input_dim=X_train.shape[1], activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-    model.add(Dense(50, activation='relu'))
-
-    model.add(Dense(32, activation='softmax'))
-
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.00004),
-                  metrics=['accuracy'])
-    if mode == 1:
-        history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=600,
-                            batch_size=60,
-                            callbacks=[early_stopping])
-    else:
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=600, batch_size=60,
-                            callbacks=[early_stopping])
-
-    # Evaluate the model
-    if mode == 1:
-        test_scores = model.evaluate(X_test, y_test, verbose=0)
-        train_scores = model.evaluate(X_resampled, y_resampled, verbose=0)
-    else:
-        test_scores = model.evaluate(X_test, y_test, verbose=0)
-        train_scores = model.evaluate(X_train, y_train, verbose=0)
-
-    print("*" * 100, "Test and Train accuracy", "*" * 20)
-    print(f"Test accuracy: {test_scores[1]:.4f}")
-    print(f"Train accuracy: {train_scores[1]:.4f}")
-
-    # Plot confusion matrix
-    y_pred_test = model.predict(X_test)
-    y_pred_test = np.argmax(y_pred_test, axis=1)
-
-    if mode == 1:
-        y_pred_train = model.predict(X_resampled)
-        y_pred_train = np.argmax(y_pred_train, axis=1)
-    else:
-        y_pred_train = model.predict(X_train)
-        y_pred_train = np.argmax(y_pred_train, axis=1)
-
-    class_names = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                          'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
-                          'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
-                          'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].columns.tolist()
-
-    cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred_test)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
-    fig, ax = plt.subplots(figsize=(10, 10))
-    disp.plot(ax=ax)
-    disp.ax_.set_title("Confusion matrix on test set")
-    disp.ax_.set(xlabel='Predicted', ylabel='True')
-    plt.xticks(rotation=90)
-    plt.show()
-
-    if mode == 1:
-        cm = confusion_matrix(np.argmax(y_resampled.values, axis=1), y_pred_train)
-    else:
-        cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
-    fig, ax = plt.subplots(figsize=(10, 10))
-    disp.plot(ax=ax)
-    disp.ax_.set_title("Confusion matrix on train set")
-    disp.ax_.set(xlabel='Predicted', ylabel='True')
-    plt.xticks(rotation=90)
-    plt.show()
-
-    # Plot loss and accuracy
-    plt.plot(history.history['loss'], label='train_loss')
-    plt.plot(history.history['val_loss'], label='val_loss')
-    plt.title('Loss/Epochs')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.show()
-
-    plt.plot(history.history['accuracy'], label='train_accuracy')
-    plt.plot(history.history['val_accuracy'], label='val_accuracy')
-    plt.title('Accuracy/Epochs')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
-    plt.show()
-
-    return None
-
-
-def reduceDataframe(dframe):
-    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-
-    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
-                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
-                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
-
-    filtered_df = dframe[bool_columns.any(axis=1)]
-
-    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
-        lambda x: x.sample(min(len(x), 200)))
-
-    sampled_df = sampled_df.reset_index(drop=True)
-
-    return sampled_df
-
-
 def gridSearch(dframe):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
     # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
@@ -1121,6 +983,154 @@ def gridSearch(dframe):
     return None
 
 
+def bonusThird(dframe, mode=0):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+    # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    X = dframe.drop(columns=['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                             'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                             'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                             'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul'])
+    y = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']]
+
+    X_train, X_valid_test, y_train, y_valid_test = train_test_split(X, y, shuffle=True, test_size=0.2, random_state=20)
+    X_valid, X_test, y_valid, y_test = train_test_split(X_valid_test, y_valid_test, shuffle=True, test_size=0.5,
+                                                        random_state=20)
+
+    scaler = MinMaxScaler()
+
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+    X_train = pd.DataFrame(X_train, columns=X.columns)
+    X_valid = pd.DataFrame(X_valid, columns=X.columns)
+    X_test = pd.DataFrame(X_test, columns=X.columns)
+
+    if mode == 1:
+        smote = SMOTE(random_state=1)
+        X_resampled, y_resampled = smote.fit_resample(X_train.values, y_train.values)
+        X_resampled = pd.DataFrame(X_resampled, columns=X.columns)
+        y_resampled = pd.DataFrame(y_resampled, columns=y.columns)
+
+
+    # Train MLP model in Keras
+    early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+    model = Sequential()
+    if mode == 1:
+        model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
+    else:
+        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+
+    model.add(Dense(32, activation='softmax'))
+
+    model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0004),
+                  metrics=['accuracy'])
+    if mode == 1:
+        history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=600,
+                            batch_size=150,
+                            callbacks=[early_stopping])
+    else:
+        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=600, batch_size=180,
+                            callbacks=[early_stopping])
+
+    # Evaluate the model
+    if mode == 1:
+        test_scores = model.evaluate(X_test, y_test, verbose=0)
+        train_scores = model.evaluate(X_resampled, y_resampled, verbose=0)
+    else:
+        test_scores = model.evaluate(X_test, y_test, verbose=0)
+        train_scores = model.evaluate(X_train, y_train, verbose=0)
+
+    print("*" * 100, "Test and Train accuracy", "*" * 20)
+    print(f"Test accuracy: {test_scores[1]:.4f}")
+    print(f"Train accuracy: {train_scores[1]:.4f}")
+
+    # Plot confusion matrix
+    y_pred_test = model.predict(X_test)
+    y_pred_test = np.argmax(y_pred_test, axis=1)
+
+    if mode == 1:
+        y_pred_train = model.predict(X_resampled)
+        y_pred_train = np.argmax(y_pred_train, axis=1)
+    else:
+        y_pred_train = model.predict(X_train)
+        y_pred_train = np.argmax(y_pred_train, axis=1)
+
+    class_names = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                          'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                          'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                          'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].columns.tolist()
+
+    cm = confusion_matrix(np.argmax(y_test.values, axis=1), y_pred_test)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on test set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.xticks(rotation=90)
+    plt.show()
+
+    if mode == 1:
+        cm = confusion_matrix(np.argmax(y_resampled.values, axis=1), y_pred_train)
+    else:
+        cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax)
+    disp.ax_.set_title("Confusion matrix on train set")
+    disp.ax_.set(xlabel='Predicted', ylabel='True')
+    plt.xticks(rotation=90)
+    plt.show()
+
+    # Plot loss and accuracy
+    plt.plot(history.history['loss'], label='train_loss')
+    plt.plot(history.history['val_loss'], label='val_loss')
+    plt.title('Loss/Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
+    plt.plot(history.history['accuracy'], label='train_accuracy')
+    plt.plot(history.history['val_accuracy'], label='val_accuracy')
+    plt.title('Accuracy/Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.show()
+
+    return None
+
+
+def balanceDataframe(dframe):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
+
+    filtered_df = dframe[bool_columns.any(axis=1)]
+
+    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
+        lambda x: x.sample(n=1000, replace=True) if len(x) < 1000 else x.sample(1000)
+    )
+
+    sampled_df = sampled_df.reset_index(drop=True)
+
+    return sampled_df
+
+
+
 # Results---------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
@@ -1128,13 +1138,14 @@ dfThird = handleOutliersAndMissingValues(dfThird)
 df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
-# restOfFirstPart(df)
-# gridSearch(df)
+dfBalanced = balanceDataframe(dfThird)
+restOfFirstPart(df)
 secondPart(df, dfGen)
-# thirdPartOvertrain(dfThird)
-# thirdPartOvertrain(dfThird, 'early_stop')
-# thirdPartLast(dfThird, 'prvy')
-# bonusThird(dfThird)
-# bonusThird(dfThird, 1)
-# reducedDataframe = reduceDataframe(dfThird)
-# bonusThird(reducedDataframe)
+thirdPartOvertrain(dfThird)
+thirdPartOvertrain(dfThird, 'early_stop')
+thirdPartLast(dfThird, 'stvrty')
+thirdPartLast(dfThird, 'siesty')
+gridSearch(df)
+bonusThird(dfThird)
+bonusThird(dfThird, 1)
+bonusThird(dfBalanced)
