@@ -13,6 +13,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 import tensorflow as tf
 import keras
+import seaborn as sns
 from keras import layers, Sequential
 from imblearn.over_sampling import SMOTE
 
@@ -377,52 +378,39 @@ def createAnalysisLivenessSpeechiness(dframeGen):
     dframeGen['liveness_interval'] = pd.cut(dframeGen['liveness'],
                                             bins=np.linspace(dframeGen['liveness'].min(), dframeGen['liveness'].max(),
                                                              num_intervals + 1))
-    average_speechiness = dframeGen.groupby('liveness_interval')['speechiness'].mean()
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(average_speechiness.index.categories.mid, average_speechiness.values, marker='o', color='skyblue')
-    plt.title('Average speechiness vs. liveness')
-    plt.xlabel('liveness')
-    plt.ylabel('Average speechiness')
-    plt.grid(True)
+    plt.figure(figsize=(10, 10))
+    sns.stripplot(x=dframeGen['liveness_interval'], y=dframeGen['speechiness'], palette='viridis')
+    plt.title('Strip Plot')
+    plt.xlabel('liveness_interval')
+    plt.ylabel('speechiness')
+    plt.xticks(rotation=25)
     plt.show()
 
     return None
 
 
-def createAnalysisTempoTopGenre(dframeGen):
+def createAnalysisDanceabilityTopGenre(dframeGen):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(dframeGen['tempo'], dframeGen['top_genre'], color='skyblue')
+    plt.scatter(dframeGen['danceability'], dframeGen['top_genre'], color='skyblue')
     plt.title('Scatter Plot')
-    plt.xlabel('tempo')
+    plt.xlabel('danceability')
     plt.ylabel('top_genre')
     plt.show()
 
-    avg_bpm_per_genre = dframeGen.groupby('top_genre')['tempo'].mean().reset_index()
-    avg_bpm_per_genre = avg_bpm_per_genre.sort_values(by='tempo', ascending=False)
-
-    plt.figure(figsize=(16, 10))
-    plt.bar(avg_bpm_per_genre['top_genre'], avg_bpm_per_genre['tempo'], color='skyblue')
-    plt.title('Average BPM per Genre')
-    plt.xlabel('Genre')
-    plt.ylabel('Average BPM')
-    plt.xticks(rotation=45)
-    plt.show()
-
-    means = [dframeGen['tempo'][dframeGen['top_genre'] == genre].mean() for genre in dframeGen['top_genre'].unique()]
+    means = [dframeGen['danceability'][dframeGen['top_genre'] == genre].mean() for genre in dframeGen['top_genre'].unique()]
 
     genre_means = dict(zip(dframeGen['top_genre'].unique(), means))
 
     sorted_genres = sorted(dframeGen['top_genre'].unique(), key=lambda genre: genre_means[genre])
 
     plt.figure(figsize=(15, 10))
-    plt.title('Tempo Distribution by Genre')
+    plt.title('Danceability by Genre')
     plt.xlabel('Genre')
-    plt.ylabel('Tempo (BPM)')
+    plt.ylabel('Danceability')
 
-    plt.boxplot([dframeGen['tempo'][dframeGen['top_genre'] == genre] for genre in sorted_genres],
+    plt.boxplot([dframeGen['danceability'][dframeGen['top_genre'] == genre] for genre in sorted_genres],
                 labels=sorted_genres)
 
     sorted_means = [genre_means[genre] for genre in sorted_genres]
@@ -625,12 +613,12 @@ def createAnalysisComedySpeechiness(dframeGen):
 
 
 def secondPart(dframe, dframeGen):
-    createCorrelationHeatmaps(dframe, dframeGen)
-    createAnalysisEnergyLoudness(dframeGen)
-    createAnalysisLivenessSpeechiness(dframeGen)
-    createAnalysisTempoTopGenre(dframeGen)
-    createAnalysisTopGenreFilteredGenres(dframeGen)
-    createAnalysisComedySpeechiness(dframeGen)
+    # createCorrelationHeatmaps(dframe, dframeGen)
+    # createAnalysisEnergyLoudness(dframeGen)
+    # createAnalysisLivenessSpeechiness(dframeGen)
+    createAnalysisDanceabilityTopGenre(dframeGen)
+    # createAnalysisTopGenreFilteredGenres(dframeGen)
+    # createAnalysisComedySpeechiness(dframeGen)
     return None
 
 
@@ -1140,13 +1128,13 @@ dfThird = handleOutliersAndMissingValues(dfThird)
 df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
-restOfFirstPart(df)
-gridSearch(df)
+# restOfFirstPart(df)
+# gridSearch(df)
 secondPart(df, dfGen)
-thirdPartOvertrain(dfThird)
-thirdPartOvertrain(dfThird, 'early_stop')
-thirdPartLast(dfThird, 'prvy')
-bonusThird(dfThird)
-bonusThird(dfThird, 1)
-reducedDataframe = reduceDataframe(dfThird)
-bonusThird(reducedDataframe)
+# thirdPartOvertrain(dfThird)
+# thirdPartOvertrain(dfThird, 'early_stop')
+# thirdPartLast(dfThird, 'prvy')
+# bonusThird(dfThird)
+# bonusThird(dfThird, 1)
+# reducedDataframe = reduceDataframe(dfThird)
+# bonusThird(reducedDataframe)
