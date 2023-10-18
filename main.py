@@ -984,6 +984,43 @@ def gridSearch(dframe):
     return None
 
 
+def reduceDataframe(dframe):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
+
+    filtered_df = dframe[bool_columns.any(axis=1)]
+
+    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
+        lambda x: x.sample(min(len(x), 200)))
+
+    sampled_df = sampled_df.reset_index(drop=True)
+
+    return sampled_df
+
+
+def balanceDataframe(dframe):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
+
+    filtered_df = dframe[bool_columns.any(axis=1)]
+
+    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
+        lambda x: x.sample(n=1000, replace=True) if len(x) < 1000 else x.sample(1000)
+    )
+
+    sampled_df = sampled_df.reset_index(drop=True)
+
+    return sampled_df
+
+
 def bonusThird(dframe):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
     # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
@@ -1084,43 +1121,6 @@ def bonusThird(dframe):
     plt.show()
 
     return None
-
-
-def reduceDataframe(dframe):
-    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-
-    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
-                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
-                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
-
-    filtered_df = dframe[bool_columns.any(axis=1)]
-
-    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
-        lambda x: x.sample(min(len(x), 200)))
-
-    sampled_df = sampled_df.reset_index(drop=True)
-
-    return sampled_df
-
-
-def balanceDataframe(dframe):
-    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-
-    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
-                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
-                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
-                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
-
-    filtered_df = dframe[bool_columns.any(axis=1)]
-
-    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
-        lambda x: x.sample(n=1000, replace=True) if len(x) < 1000 else x.sample(1000)
-    )
-
-    sampled_df = sampled_df.reset_index(drop=True)
-
-    return sampled_df
 
 
 # Results---------------------------------------------------------------------------------------------------------------
