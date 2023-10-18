@@ -14,7 +14,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 # ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
 # ======================================================================================================================
-# Zdrojove kody z cviceni:
+# Zdrojove kody z cviceni (dostupne na dokumentovom serveri AIS):
 #   Autor: Ing. Vanesa Andicsová
 #   Subory:
 #       seminar2.py
@@ -732,7 +732,6 @@ def thirdPartLast(dframe, mode):
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
     if mode == 'prvy':
-        # Train MLP model in Keras
         early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
@@ -745,7 +744,6 @@ def thirdPartLast(dframe, mode):
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     if mode == 'druhy':
-        # Train MLP model in Keras
         early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
@@ -758,7 +756,6 @@ def thirdPartLast(dframe, mode):
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     if mode == 'treti':
-        # Train MLP model in Keras
         early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
@@ -771,7 +768,6 @@ def thirdPartLast(dframe, mode):
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     if mode == 'stvrty':
-        # Train MLP model in Keras
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
@@ -783,7 +779,6 @@ def thirdPartLast(dframe, mode):
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     if mode == 'piaty':
-        # Train MLP model in Keras
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
@@ -797,7 +792,6 @@ def thirdPartLast(dframe, mode):
         history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=200, batch_size=30,
                             callbacks=[early_stopping])
     if mode == 'siesty':
-        # Train MLP model in Keras
         early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
         model = Sequential()
         model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
