@@ -1,3 +1,16 @@
+Categorical Crossentropy (loss)
+ADAM (optimizer) xxx
+ReLu (vsetky okrem vystupu) xxx
+Softmax (vystup) xxx
+8:1:1 (train, test, valid) xxx
+
+    X_train = scaler.fit_transform(X_train)
+    X_valid = scaler.transform(X_valid)
+    X_test = scaler.transform(X_test)
+
+
+
+
 otazky [done]
 dokumentacia reread,rewrite [to-be-done]
 upravit learningrate nech su krajsie data [done]

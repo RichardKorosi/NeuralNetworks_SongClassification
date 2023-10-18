@@ -1,21 +1,16 @@
-import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
+from keras import Sequential
 from keras.src.callbacks import EarlyStopping
 from keras.src.layers import Dense
 from keras.src.optimizers import Adam, SGD
-from sklearn.feature_selection import RFE
-from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-import tensorflow as tf
-import keras
-import seaborn as sns
-from keras import layers, Sequential
-from imblearn.over_sampling import SMOTE, RandomOverSampler
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 # ZDROJE KU KODOM ------------------------------------------------------------------------------------------------------
 # ======================================================================================================================
@@ -25,7 +20,7 @@ from imblearn.over_sampling import SMOTE, RandomOverSampler
 #       seminar2.py
 #       main.py
 # ======================================================================================================================
-# Grafy, Pomocne funkcie, SMOTE...:
+# Grafy, Pomocne funkcie...:
 #  Autor: Github Copilot, ChatGPT
 #  Grafy, pomocne funkcie  boli vypracoavane za pomoci ChatGPT a GithubCopilota
 # ======================================================================================================================
@@ -630,6 +625,7 @@ def secondPart(dframe, dframeGen):
 
 def thirdPartOvertrain(dframe, mode='overtrain'):
     # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
     y = dframe[['happy', 'sad', 'calm', 'energetic']]
@@ -1057,7 +1053,6 @@ def bonusThird(dframe):
     model.add(Dense(50, activation='relu'))
     model.add(Dense(50, activation='relu'))
     model.add(Dense(50, activation='relu'))
-
     model.add(Dense(32, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0004),
