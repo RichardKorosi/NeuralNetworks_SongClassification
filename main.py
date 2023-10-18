@@ -19,6 +19,9 @@ from sklearn.preprocessing import MinMaxScaler
 #   Subory:
 #       seminar2.py
 #       main.py
+# Zdrojove kody boli vyuzite napriklad pre vypisy do konzoly, vytvorenie zakladnych grafov,
+# ktore sme mali za ulohu  vypracovat
+# Taktiez kody boli vyuzite pri zakladnom nastavovani vstupnych/vystupnych dat (X,y) a pri zakladnom nastavovani modelu
 # ======================================================================================================================
 # Grafy, Pomocne funkcie...:
 #  Autor: Github Copilot, ChatGPT
@@ -147,6 +150,7 @@ def encodeGenres(dframe, mode=0):
 
 def createHistogramsPartOne(X_train, time):
     # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     attributes = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
                   'valence', 'tempo', 'duration_ms', 'popularity', 'number_of_artists']
@@ -1012,8 +1016,8 @@ def balanceDataframe(dframe):
 
 
 def bonusThird(dframe):
+    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-    # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                              'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
