@@ -865,6 +865,7 @@ def thirdPartLast(dframe, mode):
 
     return None
 
+
 def gridSearch(dframe):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
     # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
@@ -983,7 +984,7 @@ def gridSearch(dframe):
     return None
 
 
-def bonusThird(dframe, mode=0):
+def bonusThird(dframe):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
     # Casti kodu SMOTE boli vypracovane pomocou ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
@@ -1010,20 +1011,10 @@ def bonusThird(dframe, mode=0):
     X_valid = pd.DataFrame(X_valid, columns=X.columns)
     X_test = pd.DataFrame(X_test, columns=X.columns)
 
-    if mode == 1:
-        smote = SMOTE(random_state=1)
-        X_resampled, y_resampled = smote.fit_resample(X_train.values, y_train.values)
-        X_resampled = pd.DataFrame(X_resampled, columns=X.columns)
-        y_resampled = pd.DataFrame(y_resampled, columns=y.columns)
-
-
     # Train MLP model in Keras
     early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
     model = Sequential()
-    if mode == 1:
-        model.add(Dense(45, input_dim=X_resampled.shape[1], activation='relu'))
-    else:
-        model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
+    model.add(Dense(45, input_dim=X_train.shape[1], activation='relu'))
     model.add(Dense(50, activation='relu'))
     model.add(Dense(50, activation='relu'))
     model.add(Dense(50, activation='relu'))
@@ -1034,21 +1025,12 @@ def bonusThird(dframe, mode=0):
 
     model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=0.0004),
                   metrics=['accuracy'])
-    if mode == 1:
-        history = model.fit(x=X_resampled, y=y_resampled, validation_data=(X_valid, y_valid), epochs=600,
-                            batch_size=150,
-                            callbacks=[early_stopping])
-    else:
-        history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=600, batch_size=180,
-                            callbacks=[early_stopping])
+    history = model.fit(x=X_train, y=y_train, validation_data=(X_valid, y_valid), epochs=600, batch_size=180,
+                        callbacks=[early_stopping])
 
     # Evaluate the model
-    if mode == 1:
-        test_scores = model.evaluate(X_test, y_test, verbose=0)
-        train_scores = model.evaluate(X_resampled, y_resampled, verbose=0)
-    else:
-        test_scores = model.evaluate(X_test, y_test, verbose=0)
-        train_scores = model.evaluate(X_train, y_train, verbose=0)
+    test_scores = model.evaluate(X_test, y_test, verbose=0)
+    train_scores = model.evaluate(X_train, y_train, verbose=0)
 
     print("*" * 100, "Test and Train accuracy", "*" * 20)
     print(f"Test accuracy: {test_scores[1]:.4f}")
@@ -1058,12 +1040,8 @@ def bonusThird(dframe, mode=0):
     y_pred_test = model.predict(X_test)
     y_pred_test = np.argmax(y_pred_test, axis=1)
 
-    if mode == 1:
-        y_pred_train = model.predict(X_resampled)
-        y_pred_train = np.argmax(y_pred_train, axis=1)
-    else:
-        y_pred_train = model.predict(X_train)
-        y_pred_train = np.argmax(y_pred_train, axis=1)
+    y_pred_train = model.predict(X_train)
+    y_pred_train = np.argmax(y_pred_train, axis=1)
 
     class_names = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
@@ -1079,10 +1057,7 @@ def bonusThird(dframe, mode=0):
     plt.xticks(rotation=90)
     plt.show()
 
-    if mode == 1:
-        cm = confusion_matrix(np.argmax(y_resampled.values, axis=1), y_pred_train)
-    else:
-        cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
+    cm = confusion_matrix(np.argmax(y_train.values, axis=1), y_pred_train)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
     fig, ax = plt.subplots(figsize=(10, 10))
     disp.plot(ax=ax)
@@ -1111,6 +1086,24 @@ def bonusThird(dframe, mode=0):
     return None
 
 
+def reduceDataframe(dframe):
+    # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
+
+    bool_columns = dframe[['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
+                           'disco', 'edm', 'emo', 'folk', 'forro', 'funk', 'grunge', 'hardcore', 'house',
+                           'industrial', 'j-pop', 'j-rock', 'jazz', 'metal', 'metalcore', 'opera', 'pop', 'punk',
+                           'reggaeton', 'rock', 'rockabilly', 'ska', 'sleep', 'soul']].astype(bool)
+
+    filtered_df = dframe[bool_columns.any(axis=1)]
+
+    sampled_df = filtered_df.groupby(bool_columns.columns.tolist(), group_keys=False).apply(
+        lambda x: x.sample(min(len(x), 200)))
+
+    sampled_df = sampled_df.reset_index(drop=True)
+
+    return sampled_df
+
+
 def balanceDataframe(dframe):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
@@ -1130,7 +1123,6 @@ def balanceDataframe(dframe):
     return sampled_df
 
 
-
 # Results---------------------------------------------------------------------------------------------------------------
 df = handleOutliersAndMissingValues(df)
 dfGen = handleOutliersAndMissingValues(dfGen, 1)
@@ -1139,6 +1131,7 @@ df, le = encodeGenres(df)
 dfGen = encodeGenres(dfGen, 1)
 dfThird = encodeGenres(dfThird, 2)
 dfBalanced = balanceDataframe(dfThird)
+dfReduced = reduceDataframe(dfThird)
 restOfFirstPart(df)
 secondPart(df, dfGen)
 thirdPartOvertrain(dfThird)
@@ -1147,5 +1140,5 @@ thirdPartLast(dfThird, 'stvrty')
 thirdPartLast(dfThird, 'siesty')
 gridSearch(df)
 bonusThird(dfThird)
-bonusThird(dfThird, 1)
+bonusThird(dfReduced)
 bonusThird(dfBalanced)
