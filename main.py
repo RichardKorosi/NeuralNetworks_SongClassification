@@ -29,7 +29,7 @@ from sklearn.preprocessing import MinMaxScaler
 # ======================================================================================================================
 
 # Uvod -----------------------------------------------------------------------------------------------------------------
-# Uvod bol inspirovany zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+# Uvod bol inspirovany zdrojovym kodom seminar2.py (vid. ZDROJE KU KODOM)
 
 pd.options.display.width = None
 pd.options.display.max_columns = None
@@ -46,7 +46,7 @@ dfBonus = pd.read_csv('./data/zadanie1_dataset.csv')
 
 # Functions ------------------------------------------------------------------------------------------------------------
 def handleOutliersAndMissingValues(dframe, mode=0):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py (vid. ZDROJE KU KODOM)
 
     # Handle outliers
     print("*" * 100, "Before removing outliers", "*" * 100)
@@ -90,7 +90,7 @@ def handleOutliersAndMissingValues(dframe, mode=0):
 
 
 def encodeGenres(dframe, mode=0):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py (vid. ZDROJE KU KODOM)
 
     if mode == 0:
         # First Part
@@ -149,7 +149,7 @@ def encodeGenres(dframe, mode=0):
 
 
 def createHistogramsPartOne(X_train, time):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py (vid. ZDROJE KU KODOM)
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     attributes = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness',
@@ -202,7 +202,7 @@ def createPiechartsPartOne(X_train):
 
 
 def restOfFirstPart(dframe):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['emotion'])
     y = dframe['emotion']
@@ -628,7 +628,7 @@ def secondPart(dframe, dframeGen):
 
 
 def thirdPartOvertrain(dframe, mode='overtrain'):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
@@ -716,7 +716,7 @@ def thirdPartOvertrain(dframe, mode='overtrain'):
 
 
 def thirdPartLast(dframe, mode):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['happy', 'sad', 'calm', 'energetic'])
@@ -862,7 +862,7 @@ def thirdPartLast(dframe, mode):
 
 def gridSearch(dframe):
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['emotion'])
     y = dframe['emotion']
@@ -1016,7 +1016,7 @@ def balanceDataframe(dframe):
 
 
 def bonusThird(dframe):
-    # Tato funkcia bola inspirovana zdrojovim kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
+    # Tato funkcia bola inspirovana zdrojovym kodom seminar2.py a main.py (vid. ZDROJE KU KODOM)
     # Tato funkcia bola vypracovana a upravovana za pomoci ChatGPT a GithubCopilota (vid. ZDROJE KU KODOM)
 
     X = dframe.drop(columns=['ambient', 'anime', 'bluegrass', 'blues', 'classical', 'comedy', 'country', 'dancehall',
